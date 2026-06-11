@@ -117,6 +117,9 @@
       </div>
     </div>
 
+    <!-- Gentle message -->
+    <div class="gentle-message">Everything will be ok</div>
+
     <!-- Login card -->
     <div class="login-card-wrapper" :style="cardParallaxStyle">
       <div class="login-card">
@@ -765,6 +768,26 @@ onUnmounted(() => {
   0% { opacity: 0; transform: translateY(0) scale(0.4); }
   25% { opacity: 1; transform: translateY(-6px) scale(1.2); }
   100% { opacity: 0; transform: translateY(-24px) scale(0.6); }
+}
+
+/* ==================== Gentle Message ==================== */
+.gentle-message {
+  position: relative;
+  z-index: 3;
+  font-size: 14px;
+  font-weight: 300;
+  color: rgba(180, 210, 255, 0.35);
+  letter-spacing: 0.08em;
+  text-align: center;
+  margin-bottom: 12px;
+  font-style: italic;
+  animation: messageFade 2s ease-in;
+  user-select: none;
+}
+
+@keyframes messageFade {
+  0% { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
 /* ==================== Login Card ==================== */
