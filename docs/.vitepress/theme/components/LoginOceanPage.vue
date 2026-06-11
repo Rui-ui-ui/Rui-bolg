@@ -1,187 +1,203 @@
 <template>
   <div class="login-ocean" @mousemove="handleMouseMove" @mouseleave="handleMouseLeave" ref="containerRef">
-    <!-- Canvas for wave rendering -->
-    <canvas ref="waveCanvas" class="wave-canvas"></canvas>
+    <!-- Canvas for ocean -->
+    <canvas ref="oceanCanvas" class="ocean-canvas"></canvas>
 
-    <!-- Cloud layers -->
-    <div class="clouds-layer" :style="cloudsParallaxStyle">
-      <div class="cloud cloud-1"></div>
-      <div class="cloud cloud-2"></div>
-      <div class="cloud cloud-3"></div>
-    </div>
-
-    <!-- Ocean surface sparkle -->
-    <div class="sparkle-layer">
-      <div v-for="n in 20" :key="'s'+n" class="sparkle" :style="sparkleStyle(n)"></div>
-    </div>
-
-    <!-- Floating bubbles -->
-    <div class="bubbles">
-      <div
-        v-for="n in 10"
-        :key="n"
-        class="bubble"
-        :style="bubbleStyle(n)"
-      ></div>
-    </div>
-
-    <!-- Cute White Dog -->
-    <div class="dog-wrapper">
+    <!-- Little White Dog -->
+    <div class="dog-area">
       <div class="dog" :class="dogActionClass" @click="nextDogAction">
-        <div class="dog-body">
+        <svg viewBox="0 0 200 200" class="dog-svg" xmlns="http://www.w3.org/2000/svg">
           <!-- Tail -->
-          <div class="dog-tail">
-            <div class="tail-tip"></div>
-          </div>
+          <g class="dog-tail-group">
+            <path d="M148 108 Q170 90 168 72 Q166 62 158 66 Q150 70 148 87 Q147 98 148 108Z"
+                  fill="#f0f0f0" stroke="#e0e0e0" stroke-width="0.5"/>
+          </g>
 
           <!-- Body -->
-          <div class="dog-torso">
-            <div class="leg back-leg"><div class="paw"></div></div>
-            <div class="leg scratch-leg"><div class="paw"></div></div>
-          </div>
+          <ellipse cx="98" cy="142" rx="42" ry="34" fill="#fcfcfc" stroke="#e8e8e8" stroke-width="1"/>
+          <ellipse cx="98" cy="145" rx="38" ry="28" fill="#f8f8f8"/>
+
+          <!-- Back legs -->
+          <g class="back-legs-group">
+            <ellipse cx="68" cy="168" rx="12" ry="8" fill="#f0f0f0" stroke="#e0e0e0" stroke-width="0.5"/>
+            <ellipse cx="128" cy="168" rx="12" ry="8" fill="#f0f0f0" stroke="#e0e0e0" stroke-width="0.5"/>
+            <!-- Paws -->
+            <ellipse cx="66" cy="173" rx="7" ry="4" fill="#e8e8e8"/>
+            <ellipse cx="130" cy="173" rx="7" ry="4" fill="#e8e8e8"/>
+          </g>
+
+          <!-- Left hind leg (for scratching) -->
+          <g class="scratch-leg-group">
+            <path d="M130 160 Q145 150 140 140 Q136 134 130 140 Q125 146 128 158Z"
+                  fill="#f0f0f0" stroke="#e0e0e0" stroke-width="0.5"/>
+            <ellipse cx="137" cy="139" rx="6" ry="3" fill="#e8e8e8"/>
+          </g>
 
           <!-- Head -->
-          <div class="dog-head">
-            <div class="ear ear-left"></div>
-            <div class="ear ear-right"></div>
-            <div class="face">
-              <div class="eye eye-left">
-                <div class="eyeball"></div>
-                <div class="eyelid"></div>
-              </div>
-              <div class="eye eye-right">
-                <div class="eyeball"></div>
-                <div class="eyelid"></div>
-              </div>
-              <div class="nose"><div class="nose-highlight"></div></div>
-              <div class="mouth"><div class="tongue"></div></div>
-              <div class="blush blush-left"></div>
-              <div class="blush blush-right"></div>
-            </div>
-          </div>
+          <g class="dog-head-group">
+            <!-- Left ear -->
+            <path class="dog-ear ear-l" d="M52 82 Q34 82 30 98 Q26 112 38 118 Q48 122 54 108 Q58 96 52 82Z"
+                  fill="#f0f0f0" stroke="#e0e0e0" stroke-width="0.8"/>
+            <!-- Right ear -->
+            <path class="dog-ear ear-r" d="M144 82 Q162 82 166 98 Q170 112 158 118 Q148 122 142 108 Q138 96 144 82Z"
+                  fill="#f0f0f0" stroke="#e0e0e0" stroke-width="0.8"/>
+
+            <!-- Head base -->
+            <ellipse cx="98" cy="92" rx="40" ry="36" fill="#fcfcfc" stroke="#e8e8e8" stroke-width="1"/>
+            <ellipse cx="98" cy="94" rx="38" ry="33" fill="#fafafa"/>
+
+            <!-- Face markings -->
+            <ellipse cx="98" cy="102" rx="18" ry="12" fill="#f5f5f5"/>
+
+            <!-- Eyes -->
+            <g class="dog-eyes">
+              <!-- Left eye -->
+              <ellipse cx="82" cy="86" rx="7" ry="8" fill="#fff"/>
+              <ellipse cx="83" cy="87" rx="5" ry="5.5" fill="#221c2e"/>
+              <circle cx="84.5" cy="85.5" r="2" fill="#fff"/>
+              <circle cx="81.5" cy="88.5" r="1" fill="rgba(255,255,255,0.3)"/>
+
+              <!-- Right eye -->
+              <ellipse cx="114" cy="86" rx="7" ry="8" fill="#fff"/>
+              <ellipse cx="115" cy="87" rx="5" ry="5.5" fill="#221c2e"/>
+              <circle cx="116.5" cy="85.5" r="2" fill="#fff"/>
+              <circle cx="113.5" cy="88.5" r="1" fill="rgba(255,255,255,0.3)"/>
+
+              <!-- Eyelids (for sleeping) -->
+              <rect class="eyelid eyelid-l" x="74" y="76" width="16" height="14" rx="7" fill="#fafafa" opacity="0"/>
+              <rect class="eyelid eyelid-r" x="106" y="76" width="16" height="14" rx="7" fill="#fafafa" opacity="0"/>
+            </g>
+
+            <!-- Eyebrows -->
+            <path d="M74 78 Q82 74 90 77" stroke="#e0e0e0" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+            <path d="M106 77 Q114 74 122 78" stroke="#e0e0e0" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+
+            <!-- Nose -->
+            <ellipse cx="98" cy="101" rx="6" ry="4.5" fill="#332844"/>
+            <ellipse cx="99" cy="100" rx="2" ry="1.5" fill="#554466" opacity="0.6"/>
+
+            <!-- Mouth -->
+            <path class="dog-mouth" d="M98 105 Q92 112 86 108" stroke="rgba(80,60,80,0.25)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+            <path class="dog-mouth" d="M98 105 Q104 112 110 108" stroke="rgba(80,60,80,0.25)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+
+            <!-- Tongue -->
+            <ellipse class="dog-tongue" cx="98" cy="113" rx="4" ry="3" fill="#ff8a9e" opacity="0"/>
+          </g>
 
           <!-- Front legs -->
-          <div class="front-legs">
-            <div class="leg front-leg front-left"><div class="paw"></div></div>
-            <div class="leg front-leg front-right"><div class="paw"></div></div>
-          </div>
-        </div>
+          <g class="front-legs-group">
+            <ellipse cx="76" cy="168" rx="9" ry="16" fill="#f5f5f5" stroke="#e8e8e8" stroke-width="0.5"/>
+            <ellipse cx="120" cy="168" rx="9" ry="16" fill="#f5f5f5" stroke="#e8e8e8" stroke-width="0.5"/>
+            <!-- Paw pads -->
+            <ellipse cx="75" cy="180" rx="6" ry="3.5" fill="#eaeaea"/>
+            <ellipse cx="121" cy="180" rx="6" ry="3.5" fill="#eaeaea"/>
+          </g>
 
+          <!-- Blush -->
+          <circle class="blush blush-l" cx="73" cy="100" r="6" fill="#ffb0b0" opacity="0"/>
+          <circle class="blush blush-r" cx="123" cy="100" r="6" fill="#ffb0b0" opacity="0"/>
+        </svg>
+
+        <!-- Action label -->
         <div class="action-label">{{ currentActionLabel }}</div>
 
-        <!-- Zzz for sleeping -->
-        <div class="zzz-container" v-show="dogAction === 'sleep'">
-          <span class="zzz z1">z</span>
-          <span class="zzz z2">z</span>
-          <span class="zzz z3">z</span>
+        <!-- Zzz -->
+        <div class="zzz-box" v-show="dogAction === 'sleep'">
+          <span class="zzz">z</span>
+          <span class="zzz">z</span>
+          <span class="zzz">z</span>
         </div>
 
-        <!-- Hearts for happy -->
-        <div class="hearts-container" v-show="dogAction === 'happy'">
-          <span class="heart h1">♥</span>
-          <span class="heart h2">♥</span>
-          <span class="heart h3">♥</span>
+        <!-- Hearts -->
+        <div class="hearts-box" v-show="dogAction === 'happy'">
+          <span class="heart">♥</span>
+          <span class="heart">♥</span>
+          <span class="heart">♥</span>
         </div>
       </div>
     </div>
 
     <!-- Login card -->
     <div class="login-card-wrapper" :style="cardParallaxStyle">
-      <div class="login-card" ref="loginCardRef">
-        <div class="card-header">
-          <div class="avatar">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-              <circle cx="12" cy="7" r="4"/>
-            </svg>
-          </div>
-          <h2>欢迎回来</h2>
-          <p>登录以继续探索</p>
-        </div>
-        <form class="login-form" @submit.prevent="handleLogin">
-          <div class="form-group" :class="{ 'focused': focusedField === 'email' }">
-            <label for="email-ocean">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                <polyline points="22,6 12,13 2,6"/>
+      <div class="login-card">
+        <div class="card-bg"></div>
+        <div class="card-content">
+          <div class="card-header">
+            <div class="avatar">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
               </svg>
-              邮箱
-            </label>
-            <div class="input-wrapper">
-              <input
-                id="email-ocean"
-                v-model="email"
-                type="email"
-                placeholder="your@email.com"
-                @focus="focusedField = 'email'"
-                @blur="focusedField = ''"
-              />
-              <div class="input-glow"></div>
             </div>
+            <h2>欢迎回来</h2>
+            <p>登录以继续探索</p>
           </div>
-          <div class="form-group" :class="{ 'focused': focusedField === 'password' }">
-            <label for="password-ocean">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-              </svg>
-              密码
-            </label>
-            <div class="input-wrapper">
-              <input
-                id="password-ocean"
-                v-model="password"
-                :type="showPassword ? 'text' : 'password'"
-                placeholder="••••••••"
-                @focus="focusedField = 'password'"
-                @blur="focusedField = ''"
-              />
-              <button type="button" class="toggle-pw" @click="showPassword = !showPassword">
-                <svg v-if="!showPassword" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                  <circle cx="12" cy="12" r="3"/>
-                </svg>
-                <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
-                  <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
-                  <line x1="1" y1="1" x2="23" y2="23"/>
-                </svg>
-              </button>
-              <div class="input-glow"></div>
+          <form class="login-form" @submit.prevent="handleLogin">
+            <div class="form-group" :class="{ 'focused': focusedField === 'email' }">
+              <label for="email-ocean">邮箱</label>
+              <div class="input-wrapper">
+                <input
+                  id="email-ocean"
+                  v-model="email"
+                  type="email"
+                  placeholder="your@email.com"
+                  @focus="focusedField = 'email'"
+                  @blur="focusedField = ''"
+                />
+              </div>
             </div>
+            <div class="form-group" :class="{ 'focused': focusedField === 'password' }">
+              <label for="password-ocean">密码</label>
+              <div class="input-wrapper">
+                <input
+                  id="password-ocean"
+                  v-model="password"
+                  :type="showPassword ? 'text' : 'password'"
+                  placeholder="••••••••"
+                  @focus="focusedField = 'password'"
+                  @blur="focusedField = ''"
+                />
+                <button type="button" class="toggle-pw" @click="showPassword = !showPassword">
+                  <svg v-if="!showPassword" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                  <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                    <line x1="1" y1="1" x2="23" y2="23"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="form-options">
+              <label class="remember-me">
+                <input type="checkbox" v-model="remember" />
+                <span class="checkmark"></span>
+                记住我
+              </label>
+              <a href="#" class="forgot-link">忘记密码？</a>
+            </div>
+            <button type="submit" class="login-btn" :disabled="isLoading">
+              <span v-if="!isLoading">登 录</span>
+              <span v-else class="loading-spinner"></span>
+            </button>
+            <div v-if="errorMsg" class="error-message">{{ errorMsg }}</div>
+          </form>
+          <div class="card-footer">
+            还没有账号？<a href="#">立即注册</a>
           </div>
-          <div class="form-options">
-            <label class="remember-me">
-              <input type="checkbox" v-model="remember" />
-              <span class="checkmark"></span>
-              记住我
-            </label>
-            <a href="#" class="forgot-link">忘记密码？</a>
-          </div>
-          <button type="submit" class="login-btn" :disabled="isLoading">
-            <span v-if="!isLoading">登录</span>
-            <span v-else class="loading-spinner"></span>
-          </button>
-          <div v-if="errorMsg" class="error-message">{{ errorMsg }}</div>
-        </form>
-        <div class="card-footer">
-          <p>还没有账号？<a href="#">立即注册</a></p>
         </div>
-        <div class="card-border-glow"></div>
       </div>
     </div>
-
-    <!-- Mouse follower glow -->
-    <div class="mouse-glow" :style="mouseGlowStyle"></div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue'
 
 const containerRef = ref<HTMLElement | null>(null)
-const waveCanvas = ref<HTMLCanvasElement | null>(null)
-const loginCardRef = ref<HTMLElement | null>(null)
+const oceanCanvas = ref<HTMLCanvasElement | null>(null)
 
 const email = ref('')
 const password = ref('')
@@ -191,110 +207,74 @@ const isLoading = ref(false)
 const errorMsg = ref('')
 const focusedField = ref('')
 
-// Mouse tracking
 const mouseX = ref(0.5)
 const mouseY = ref(0.5)
-const mouseScreenX = ref(0)
-const mouseScreenY = ref(0)
 
-// ==================== Wave Canvas + 日出动画 ====================
-let animationId = 0
+// ==================== Ocean Canvas ====================
+let animId = 0
 
-function initCanvas() {
-  const canvas = waveCanvas.value
+function initOcean() {
+  const canvas = oceanCanvas.value
   if (!canvas) return
   const ctx = canvas.getContext('2d')
   if (!ctx) return
 
-  const resize = () => {
-    canvas.width = window.innerWidth
-    canvas.height = window.innerHeight
+  let w = 1, h = 1
+  function resize() {
+    w = canvas.width = window.innerWidth
+    h = canvas.height = window.innerHeight
   }
   resize()
   window.addEventListener('resize', resize)
 
-  // 日出周期参数 (毫秒)
-  const CYCLE_MS = 40000        // 完整日出周期
-  const RISE_START = 0.05       // 太阳起始位置 (地平线下方)
-  const RISE_END = 0.52         // 太阳最终位置 (天空占比)
+  // Ocean parameters
+  const HORIZON_RATIO = 0.50
 
-  function drawWaves(t: number) {
-    if (!ctx || !canvas) return
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
+  // Wave parameters: [amplitude, frequency, speed, phase]
+  const waveLayers = [
+    { count: 5, ampBase: 4, freqBase: 0.012, speedBase: 0.0006, yOff: 0, alpha: 0.12 },
+    { count: 4, ampBase: 6, freqBase: 0.008, speedBase: 0.0005, yOff: 8, alpha: 0.10 },
+    { count: 4, ampBase: 8, freqBase: 0.006, speedBase: 0.0004, yOff: 18, alpha: 0.08 },
+    { count: 3, ampBase: 12, freqBase: 0.004, speedBase: 0.00035, yOff: 30, alpha: 0.07 },
+    { count: 3, ampBase: 16, freqBase: 0.003, speedBase: 0.0003, yOff: 44, alpha: 0.06 },
+    { count: 2, ampBase: 20, freqBase: 0.002, speedBase: 0.00025, yOff: 60, alpha: 0.05 },
+  ]
 
-    const w = canvas.width
-    const h = canvas.height
-    const horizonY = h * 0.52
+  const CYCLE_MS = 35000
 
-    // ===== 日出进度计算 =====
-    // 使用 sin 曲线让日出先快后慢，更自然
-    const rawProgress = (t % CYCLE_MS) / CYCLE_MS
-    // 0→1: 太阳升起 | 1→0: 快速回落（模拟落下）
-    let riseProgress: number
-    let isRising: boolean
+  function draw(t: number) {
+    if (!ctx) return
+    ctx.clearRect(0, 0, w, h)
 
-    if (rawProgress < 0.75) {
-      // 75% 时间用于日出
-      riseProgress = rawProgress / 0.75
-      isRising = true
-    } else {
-      // 25% 时间快速回落
-      riseProgress = 1 - (rawProgress - 0.75) / 0.25
-      isRising = false
-    }
+    const horizonY = h * HORIZON_RATIO
 
-    // ease-out 曲线：日出先快后慢
-    const eased = 1 - Math.pow(1 - Math.min(riseProgress, 1), 1.8)
-    const sunHeightRatio = RISE_START + eased * (RISE_END - RISE_START)
+    // Sunrise progress (0→1)
+    const raw = (t % CYCLE_MS) / CYCLE_MS
+    const sunriseProgress = raw < 0.7 ? raw / 0.7 : Math.max(0, 1 - (raw - 0.7) / 0.3)
+    const eased = 1 - Math.pow(1 - sunriseProgress, 2.2)
 
-    // 太阳位置
-    const sunX = w * 0.5 + Math.sin(t * 0.00003) * 40
-    const sunY = horizonY * sunHeightRatio + horizonY * (1 - sunHeightRatio) * 1.15
-    const sunRadius = Math.min(w, h) * 0.045
+    // Sun position
+    const maxSunY = horizonY * 0.82
+    const minSunY = horizonY * 1.12
+    const sunY = minSunY - eased * (minSunY - maxSunY)
+    const sunX = w * 0.5 + Math.sin(t * 0.00002) * 30
+    const sunR = Math.min(w, h) * 0.04
 
-    // ===== 日出辉光强度 =====
-    // 太阳刚露出地平线时辉光最强
-    const dawnGlow = Math.max(0, Math.sin(eased * Math.PI) * 0.8 + 0.2)
+    // Dawn glow intensity
+    const dawnIntensity = Math.sin(Math.min(sunriseProgress * 1.5, 1) * Math.PI) * 0.9 + 0.1
 
-    // ===== 天空渐变 (随日出动态变化) =====
-    const skyGrad = ctx.createLinearGradient(0, 0, 0, horizonY)
-
-    // 夜空底色 → 逐渐变亮
-    const nightDim = Math.max(0.15, 1 - eased * 1.2)
-    skyGrad.addColorStop(0, `rgba(5, 7, 20, ${0.6 + nightDim * 0.4})`)
-
-    // 中天颜色 (深蓝→蓝紫)
-    const midR = Math.round(8 + 40 * eased)
-    const midG = Math.round(13 + 55 * eased)
-    const midB = Math.round(36 + 90 * eased)
-    skyGrad.addColorStop(0.35, `rgb(${midR}, ${midG}, ${midB})`)
-
-    // 地平线附近 - 日出暖色辉光
-    const hr = Math.round(20 + 120 * dawnGlow * (0.6 + 0.4 * eased))
-    const hg = Math.round(15 + 80 * dawnGlow * eased)
-    const hb = Math.round(50 + 100 * dawnGlow * (0.5 + 0.5 * eased))
-    skyGrad.addColorStop(0.65, `rgb(${Math.min(hr, 180)}, ${Math.min(hg, 120)}, ${Math.min(hb, 180)})`)
-
-    // 地平线边缘 - 金色/橙色辉光
-    const horizonGlow = dawnGlow * (0.8 + 0.2 * eased)
-    skyGrad.addColorStop(0.85, `rgba(180, 120, 60, ${horizonGlow * 0.6})`)
-    skyGrad.addColorStop(0.95, `rgba(200, 150, 80, ${horizonGlow * 0.3})`)
-    skyGrad.addColorStop(1, `rgba(160, 140, 120, ${horizonGlow * 0.15})`)
-
-    ctx.fillStyle = skyGrad
-    ctx.fillRect(0, 0, w, horizonY)
-
-    // ===== 星星 (日出过程中逐渐消失) =====
-    const starAlpha = Math.max(0, 0.7 - eased * 1.5)
-    if (starAlpha > 0.01) {
-      const seed = 54321
-      for (let i = 0; i < 80; i++) {
-        const sx = ((seed * (i + 1) * 13) % w)
-        const sy = ((seed * (i + 1) * 7) % (horizonY * 0.7))
-        const sz = 0.4 + ((seed * (i + 1) * 3) % 3) * 0.4
-        const twinkle = 0.2 + 0.8 * Math.sin(t * 0.0008 + i * 3.7)
-        ctx.globalAlpha = twinkle * starAlpha
-        ctx.fillStyle = '#b8d4ff'
+    // ---- Sky ----
+    // Stars (visible at low sunrise progress)
+    if (sunriseProgress < 0.6) {
+      const starAlpha = Math.max(0, 1 - sunriseProgress * 2)
+      const seed = 9876
+      for (let i = 0; i < 60; i++) {
+        const sx = ((seed * (i+1) * 11) % w)
+        const sy = ((seed * (i+1) * 7) % (horizonY * 0.75))
+        const sz = 0.3 + ((seed * (i+1) * 3) % 3) * 0.3
+        const twinkle = 0.3 + 0.7 * Math.sin(t * 0.0007 + i * 5.1)
+        ctx.globalAlpha = twinkle * starAlpha * 0.6
+        ctx.fillStyle = '#c8d8ff'
         ctx.beginPath()
         ctx.arc(sx, sy, sz, 0, Math.PI * 2)
         ctx.fill()
@@ -302,157 +282,173 @@ function initCanvas() {
       ctx.globalAlpha = 1
     }
 
-    // ===== 地平线辉光带 =====
-    if (dawnGlow > 0.05) {
-      const glowGrad = ctx.createLinearGradient(0, horizonY - 60, 0, horizonY + 20)
-      glowGrad.addColorStop(0, 'transparent')
-      glowGrad.addColorStop(0.5, `rgba(200, 150, 80, ${dawnGlow * 0.15})`)
-      glowGrad.addColorStop(0.8, `rgba(180, 120, 60, ${dawnGlow * 0.1})`)
-      glowGrad.addColorStop(1, 'transparent')
-      ctx.fillStyle = glowGrad
-      ctx.fillRect(0, horizonY - 60, w, 80)
+    // Sky gradient - deep navy to warm sunrise
+    const skyGrad = ctx.createLinearGradient(0, 0, 0, horizonY)
+    skyGrad.addColorStop(0, `rgb(${Math.round(6 - eased * 2)}, ${Math.round(10 + eased * 5)}, ${Math.round(30 + eased * 25)})`)
+    skyGrad.addColorStop(0.3, `rgb(${Math.round(10 + eased * 30)}, ${Math.round(20 + eased * 25)}, ${Math.round(50 + eased * 30)})`)
+    skyGrad.addColorStop(0.55, `rgb(${Math.round(20 + eased * 60)}, ${Math.round(30 + eased * 30)}, ${Math.round(70 + eased * 20)})`)
+
+    // Warm band near horizon
+    const warmR = Math.round(60 + 140 * dawnIntensity * eased)
+    const warmG = Math.round(40 + 80 * dawnIntensity * eased)
+    const warmB = Math.round(60 + 60 * dawnIntensity * Math.min(1, eased * 1.5))
+    skyGrad.addColorStop(0.75, `rgb(${warmR}, ${warmG}, ${warmB})`)
+    skyGrad.addColorStop(0.88, `rgb(${Math.min(warmR + 30, 255)}, ${Math.round(warmG * 0.8)}, ${Math.round(warmB * 0.6)})`)
+    skyGrad.addColorStop(0.96, `rgb(${Math.min(warmR + 20, 255)}, ${Math.round(warmG * 0.6)}, ${Math.round(warmB * 0.3)})`)
+    skyGrad.addColorStop(1, `rgba(200, 160, 120, ${0.1 * dawnIntensity * eased})`)
+    ctx.fillStyle = skyGrad
+    ctx.fillRect(0, 0, w, horizonY)
+
+    // Horizon glow
+    if (dawnIntensity > 0.05) {
+      const hGlow = ctx.createLinearGradient(0, horizonY - 80, 0, horizonY + 20)
+      hGlow.addColorStop(0, 'transparent')
+      hGlow.addColorStop(0.5, `rgba(255, 200, 120, ${dawnIntensity * 0.2 * eased})`)
+      hGlow.addColorStop(0.8, `rgba(255, 180, 100, ${dawnIntensity * 0.12 * eased})`)
+      hGlow.addColorStop(1, 'transparent')
+      ctx.fillStyle = hGlow
+      ctx.fillRect(0, horizonY - 80, w, 100)
     }
 
-    // ===== 太阳 (从海平面升起) =====
-    // 太阳光晕 - 日出时最大
-    const glowRadius = sunRadius * (3 + dawnGlow * 2)
-    const sunGlow = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, glowRadius)
-    // 光晕颜色随日出变化
-    const gR = Math.round(180 + 75 * dawnGlow)
-    const gG = Math.round(200 + 55 * dawnGlow)
-    const gB = Math.round(255)
-    const glowAlpha1 = 0.15 + dawnGlow * 0.35
-    const glowAlpha2 = 0.06 + dawnGlow * 0.1
-    sunGlow.addColorStop(0, `rgba(${gR}, ${gG}, ${gB}, ${glowAlpha1})`)
-    sunGlow.addColorStop(0.4, `rgba(${gR - 40}, ${gG - 40}, ${gB}, ${glowAlpha2})`)
-    sunGlow.addColorStop(1, `rgba(${gR - 80}, ${gG - 80}, ${gB - 40}, 0)`)
+    // ---- Sun ----
+    const glowR = sunR * (2.5 + dawnIntensity * 1.5)
+    const sunGlow = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, glowR)
+    const gR = Math.round(255)
+    const gG = Math.round(220 + 35 * (1 - dawnIntensity))
+    const gB = Math.round(180 + 75 * (1 - dawnIntensity))
+    sunGlow.addColorStop(0, `rgba(${gR}, ${gG}, ${gB}, ${0.3 + dawnIntensity * 0.3})`)
+    sunGlow.addColorStop(0.4, `rgba(${gR}, ${gG}, ${gB}, ${0.08 + dawnIntensity * 0.08})`)
+    sunGlow.addColorStop(1, 'transparent')
     ctx.fillStyle = sunGlow
     ctx.beginPath()
-    ctx.arc(sunX, sunY, glowRadius, 0, Math.PI * 2)
+    ctx.arc(sunX, sunY, glowR, 0, Math.PI * 2)
     ctx.fill()
 
-    // 太阳本体 - 颜色随高度变化 (低时暖色, 高时冷白)
-    const warmShift = Math.max(0, 1 - eased * 2)  // 日出时带暖色
-    const bodyGrad = ctx.createRadialGradient(
-      sunX - sunRadius * 0.25, sunY - sunRadius * 0.25, 0,
-      sunX, sunY, sunRadius
-    )
-    const bR = Math.round(232 + 23 * (1 - warmShift))
-    const bG = Math.round(240 + 15 * (1 - warmShift))
-    const bB = Math.round(255)
-    bodyGrad.addColorStop(0, `rgb(${Math.min(bR + 20, 255)}, ${Math.min(bG + 15, 255)}, ${bB})`)
-    bodyGrad.addColorStop(0.3, `rgb(${bR}, ${bG}, ${bB})`)
-    bodyGrad.addColorStop(0.6, `rgb(${bR - 20 * warmShift}, ${bG - 30 * warmShift}, ${bB - 20})`)
-    bodyGrad.addColorStop(0.85, `rgb(${bR - 50 * warmShift}, ${bG - 60 * warmShift}, ${bB - 50})`)
-    bodyGrad.addColorStop(1, `rgb(${bR - 70 * warmShift}, ${bG - 80 * warmShift}, ${bB - 70})`)
-    ctx.fillStyle = bodyGrad
+    // Sun disk
+    const sGrad = ctx.createRadialGradient(sunX-sunR*0.2, sunY-sunR*0.2, 0, sunX, sunY, sunR)
+    const warm = Math.min(1, sunriseProgress * 2)
+    sGrad.addColorStop(0, '#fff8f0')
+    sGrad.addColorStop(0.3, `rgb(${255 - (1-warm)*20}, ${240 - (1-warm)*30}, ${210 - (1-warm)*60})`)
+    sGrad.addColorStop(0.7, `rgb(${255 - (1-warm)*40}, ${220 - (1-warm)*40}, ${180 - (1-warm)*70})`)
+    sGrad.addColorStop(1, `rgb(${250 - (1-warm)*60}, ${200 - (1-warm)*50}, ${160 - (1-warm)*80})`)
+    ctx.fillStyle = sGrad
     ctx.beginPath()
-    ctx.arc(sunX, sunY, sunRadius, 0, Math.PI * 2)
+    ctx.arc(sunX, sunY, sunR, 0, Math.PI * 2)
     ctx.fill()
 
-    // ===== 太阳倒影 (水面) =====
-    if (sunY < horizonY + 40) {
+    // Sun reflection on water
+    if (sunY < horizonY + 30) {
       ctx.save()
-      const refAlpha = Math.max(0, 0.25 - eased * 0.15) * (1 - Math.abs(sunY - horizonY) / (horizonY * 0.5))
-      ctx.globalAlpha = refAlpha
-      for (let i = 0; i < 8; i++) {
-        const ry = horizonY + 3 + i * 9 + Math.sin(t * 0.002 + i * 1.2) * 2
-        const rw = (28 - i * 3) * (0.6 + 0.4 * Math.sin(t * 0.003 + i * 0.7))
+      const refIntensity = dawnIntensity * Math.max(0, 1 - (sunY - horizonY) / (horizonY * 0.15))
+      ctx.globalAlpha = refIntensity * 0.35
+      for (let i = 0; i < 12; i++) {
+        const ry = horizonY + 2 + i * 7 + Math.sin(t * 0.001 + i * 0.9) * 1.5
+        const rw = (22 - i * 1.5) * (0.4 + 0.6 * Math.sin(t * 0.002 + i * 0.5))
         const rx = sunX - rw / 2
-        const colR = Math.round(180 + 75 * dawnGlow * (1 - i * 0.08))
-        const colG = Math.round(200 + 55 * dawnGlow * (1 - i * 0.1))
-        ctx.fillStyle = `rgba(${colR}, ${colG}, 255, ${0.12 - i * 0.012})`
+        ctx.fillStyle = `rgba(255, 220, 150, ${0.12 - i * 0.009})`
         ctx.beginPath()
-        ctx.ellipse(rx + rw / 2, ry, rw / 2, 1.5, 0, 0, Math.PI * 2)
+        ctx.ellipse(rx + rw/2, ry, rw/2, 1.2, 0, 0, Math.PI * 2)
         ctx.fill()
       }
       ctx.restore()
     }
 
-    // ===== 海洋底色 =====
+    // ---- Ocean ----
     const oceanGrad = ctx.createLinearGradient(0, horizonY, 0, h)
-    // 海面也受日出影响 - 靠近地平线略带暖色
-    oceanGrad.addColorStop(0, `rgba(${10 + 30 * dawnGlow}, ${22 + 20 * dawnGlow}, ${40 + 30 * dawnGlow}, 1)`)
-    oceanGrad.addColorStop(0.15, `rgba(10, 25, 48, 1)`)
-    oceanGrad.addColorStop(0.4, `rgba(8, 18, 38, 1)`)
-    oceanGrad.addColorStop(0.7, `rgba(6, 12, 26, 1)`)
-    oceanGrad.addColorStop(1, '#030a14')
+
+    // Ocean surface color - influenced by sky reflection
+    const surfR = Math.round(8 + 25 * dawnIntensity * eased)
+    const surfG = Math.round(25 + 20 * dawnIntensity * eased)
+    const surfB = Math.round(55 + 30 * dawnIntensity * eased)
+    oceanGrad.addColorStop(0, `rgb(${surfR}, ${surfG}, ${surfB})`)
+
+    oceanGrad.addColorStop(0.05, `rgb(${Math.round(surfR * 0.8)}, ${Math.round(surfG * 0.85)}, ${Math.round(surfB * 0.9)})`)
+    oceanGrad.addColorStop(0.2, `rgb(10, 26, 48)`)
+    oceanGrad.addColorStop(0.5, `rgb(7, 18, 35)`)
+    oceanGrad.addColorStop(0.8, `rgb(4, 10, 22)`)
+    oceanGrad.addColorStop(1, `rgb(2, 5, 12)`)
     ctx.fillStyle = oceanGrad
     ctx.fillRect(0, horizonY, w, h - horizonY)
 
-    // ===== 向屏幕正前方波动 =====
-    const mouseInfluenceX = (mouseX.value - 0.5) * 30
-    const mouseInfluenceY = (1 - mouseY.value) * 1.5 + 0.5
+    // ---- Waves ----
+    const mInfluence = (mouseX.value - 0.5) * 0.5 + 1
+    const mDir = (mouseX.value - 0.5) * 0.3
 
-    for (let layer = 0; layer < 6; layer++) {
-      const layerSpeed = 0.0004 + layer * 0.00035
-      const baseAmp = 6 + layer * 4
-      const perspectiveScale = 0.3 + layer * 0.12
-      const freqMultiplier = 0.012 - layer * 0.0008
-      const alpha = 0.06 + layer * 0.035
+    for (let li = 0; li < waveLayers.length; li++) {
+      const layer = waveLayers[li]
+      const yOffset = horizonY + layer.yOff
 
-      ctx.beginPath()
-      ctx.moveTo(0, h)
+      // Multiple overlapping sine waves for natural feel
+      const points: number[] = []
+      for (let x = 0; x <= w; x += 2) {
+        let waveY = 0
+        for (let wi = 0; wi < layer.count; wi++) {
+          const amp = layer.ampBase + wi * 1.5
+          const freq = layer.freqBase - wi * 0.0015
+          const speed = layer.speedBase + wi * 0.00008
+          const phase = wi * 2.3
+          const ampScale = 1 + (li / waveLayers.length) * 2.5 // perspective scaling
 
-      for (let x = 0; x <= w; x += 3) {
-        const depthFactor = 1 - (x / w - 0.5) * (x / w - 0.5) * 0.6
-        const wave1 = Math.sin(x * freqMultiplier + t * layerSpeed) * baseAmp * perspectiveScale * 1.2
-        const wave2 = Math.sin(x * 0.006 + t * 0.0008 + layer * 1.3) * baseAmp * perspectiveScale * 0.6
-        const wave3 = Math.sin(x * 0.0025 + t * 0.0015 + layer * 2.1) * baseAmp * perspectiveScale * 0.3
-        const mouseWave = mouseInfluenceX * Math.sin(x * 0.003 + t * 0.0004 + layer) * 0.3
-        const yBase = horizonY + 8 + layer * 14 + layer * layer * 2.5
-        const y = yBase + (wave1 + wave2 + wave3 + mouseWave) * mouseInfluenceY * depthFactor
-        ctx.lineTo(x, y)
+          waveY += Math.sin(x * freq + t * speed + phase) * amp * ampScale * mInfluence
+          waveY += Math.sin(x * freq * 0.4 + t * speed * 0.6 + phase * 1.7) * amp * 0.4 * ampScale
+        }
+        points.push(yOffset + waveY)
       }
 
+      // Fill wave shape
+      ctx.beginPath()
+      ctx.moveTo(0, h)
+      for (let i = 0; i < points.length; i++) {
+        const x = i * 2
+        ctx.lineTo(x, yOffset + (points[i] - yOffset) * (1 + mDir * Math.sin(x * 0.002)))
+      }
       ctx.lineTo(w, h)
       ctx.closePath()
 
-      // 波浪颜色 - 最上层略受日出影响
-      const dawnTint = layer === 0 ? Math.round(15 * dawnGlow) : 0
-      const waveColors = [
-        `rgba(${15 + dawnTint}, ${40 + dawnTint}, ${80 + dawnTint}, ALPHA)`,
-        'rgba(18, 50, 90, ALPHA)',
-        'rgba(22, 58, 105, ALPHA)',
-        'rgba(28, 68, 120, ALPHA)',
-        'rgba(35, 78, 135, ALPHA)',
-        'rgba(42, 88, 145, ALPHA)',
-      ]
-
-      ctx.fillStyle = waveColors[layer].replace('ALPHA', String(Math.min(alpha + 0.03, 0.3)))
+      // Wave color - deep blue with slight reflection
+      const refBoost = li < 2 ? dawnIntensity * 0.04 * eased : 0
+      const alpha = Math.min(layer.alpha + refBoost + 0.03, 0.35)
+      ctx.fillStyle = `rgba(${20 + refBoost * 200}, ${50 + refBoost * 150}, ${100 + refBoost * 100}, ${alpha})`
       ctx.fill()
+    }
 
-      // 波浪高光线
+    // ---- Foam / Wave crest lines ----
+    for (let li = 0; li < Math.min(2, waveLayers.length); li++) {
+      const layer = waveLayers[li]
+      const yOffset = horizonY + layer.yOff
+
       ctx.beginPath()
-      for (let x = 0; x <= w; x += 3) {
-        const depthFactor = 1 - (x / w - 0.5) * (x / w - 0.5) * 0.6
-        const wave1 = Math.sin(x * freqMultiplier + t * layerSpeed) * baseAmp * perspectiveScale * 1.2
-        const wave2 = Math.sin(x * 0.006 + t * 0.0008 + layer * 1.3) * baseAmp * perspectiveScale * 0.6
-        const wave3 = Math.sin(x * 0.0025 + t * 0.0015 + layer * 2.1) * baseAmp * perspectiveScale * 0.3
-        const mouseWave = mouseInfluenceX * Math.sin(x * 0.003 + t * 0.0004 + layer) * 0.3
-        const yBase = horizonY + 8 + layer * 14 + layer * layer * 2.5
-        const y = yBase + (wave1 + wave2 + wave3 + mouseWave) * mouseInfluenceY * depthFactor
+      for (let x = 0; x <= w; x += 4) {
+        let waveY = 0
+        for (let wi = 0; wi < layer.count; wi++) {
+          const amp = layer.ampBase + wi * 1.5
+          const freq = layer.freqBase - wi * 0.0015
+          const speed = layer.speedBase + wi * 0.00008
+          const phase = wi * 2.3
+          const ampScale = 1 + (li / waveLayers.length) * 2.5
+          waveY += Math.sin(x * freq + t * speed + phase) * amp * ampScale * mInfluence
+          waveY += Math.sin(x * freq * 0.4 + t * speed * 0.6 + phase * 1.7) * amp * 0.4 * ampScale
+        }
+        const y = yOffset + waveY
         ctx.lineTo(x, y)
       }
-      ctx.strokeStyle = `rgba(100, 180, 255, ${0.015 + layer * 0.006})`
-      ctx.lineWidth = 1.2
+      ctx.strokeStyle = `rgba(150, 220, 255, ${0.03 + dawnIntensity * 0.02})`
+      ctx.lineWidth = 1.5
       ctx.stroke()
     }
 
-    animationId = requestAnimationFrame(drawWaves)
+    animId = requestAnimationFrame(draw)
   }
 
-  animationId = requestAnimationFrame(drawWaves)
+  animId = requestAnimationFrame(draw)
 }
 
-// ==================== Mouse Handlers ====================
+// ==================== Mouse ====================
 function handleMouseMove(e: MouseEvent) {
   if (!containerRef.value) return
   const rect = containerRef.value.getBoundingClientRect()
   mouseX.value = (e.clientX - rect.left) / rect.width
   mouseY.value = (e.clientY - rect.top) / rect.height
-  mouseScreenX.value = e.clientX
-  mouseScreenY.value = e.clientY
 }
 
 function handleMouseLeave() {
@@ -460,97 +456,59 @@ function handleMouseLeave() {
   mouseY.value = 0.5
 }
 
-// ==================== Computed Styles ====================
+// ==================== Card Parallax ====================
 const cardParallaxStyle = computed(() => {
-  const dx = (mouseX.value - 0.5) * 16
-  const dy = (mouseY.value - 0.5) * 12
-  const rotateX = (mouseY.value - 0.5) * -4
-  const rotateY = (mouseX.value - 0.5) * 4
+  const dx = (mouseX.value - 0.5) * 12
+  const dy = (mouseY.value - 0.5) * 8
+  const rx = (mouseY.value - 0.5) * -3
+  const ry = (mouseX.value - 0.5) * 3
   return {
-    transform: `translate(${dx}px, ${dy}px) perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`,
+    transform: `translate(${dx}px, ${dy}px) perspective(600px) rotateX(${rx}deg) rotateY(${ry}deg)`,
   }
 })
 
-const cloudsParallaxStyle = computed(() => {
-  const dx = (mouseX.value - 0.5) * -25
-  const dy = (mouseY.value - 0.5) * -6
-  return { transform: `translate(${dx}px, ${dy}px)` }
-})
+// ==================== Dog ====================
+const dogAction = ref('idle')
+const dogActionClass = computed(() => `dog-${dogAction.value}`)
 
-const mouseGlowStyle = computed(() => ({
-  left: `${mouseScreenX.value}px`,
-  top: `${mouseScreenY.value}px`,
-}))
-
-function bubbleStyle(n: number) {
-  const size = 2 + (n % 4) * 2
-  const left = ((n * 31 + 17) % 100)
-  const delay = n * 0.9
-  const duration = 7 + (n % 5) * 3
-  const drift = ((n * 19) % 30) - 15
-  return {
-    width: `${size}px`,
-    height: `${size}px`,
-    left: `${left}%`,
-    animationDelay: `${delay}s`,
-    animationDuration: `${duration}s`,
-    '--drift': `${drift}px`,
-  }
+const actionLabelMap: Record<string, string> = {
+  idle: '摇摇尾巴',
+  look: '看什么呢？',
+  scratch: '挠痒痒',
+  sleep: 'Zzz...',
+  happy: '好开心！',
 }
+const currentActionLabel = computed(() => actionLabelMap[dogAction.value])
 
-function sparkleStyle(n: number) {
-  const left = ((n * 53 + 7) % 100)
-  const delay = n * 0.5
-  const duration = 2.5 + (n % 3) * 1.5
-  return {
-    left: `${left}%`,
-    animationDelay: `${delay}s`,
-    animationDuration: `${duration}s`,
-  }
-}
+let actionTimer: ReturnType<typeof setTimeout> | null = null
 
-// ==================== Dog Action System ====================
-const dogAction = ref<'idle'|'look'|'scratch'|'sleep'|'happy'>('idle')
-const dogActionClass = computed(() => `action-${dogAction.value}`)
-
-const actionLabels: Record<string, string> = {
-  idle: '摇尾巴~',
-  look: '左看看右看看🤔',
-  scratch: '挠痒痒🐾',
-  sleep: 'Zzz 睡着了💤',
-  happy: '好开心！♥',
-}
-const currentActionLabel = computed(() => actionLabels[dogAction.value])
-
-let dogActionTimer: ReturnType<typeof setTimeout> | null = null
-
-const actionSequence = [
-  { action: 'idle' as const, duration: 5000 },
-  { action: 'look' as const, duration: 4500 },
-  { action: 'idle' as const, duration: 3000 },
-  { action: 'scratch' as const, duration: 4000 },
-  { action: 'idle' as const, duration: 4000 },
-  { action: 'sleep' as const, duration: 6000 },
-  { action: 'idle' as const, duration: 3000 },
-  { action: 'happy' as const, duration: 4000 },
+const sequence = [
+  { a: 'idle', dur: 5000 },
+  { a: 'look', dur: 4000 },
+  { a: 'idle', dur: 3000 },
+  { a: 'scratch', dur: 3800 },
+  { a: 'idle', dur: 3500 },
+  { a: 'sleep', dur: 5500 },
+  { a: 'idle', dur: 2500 },
+  { a: 'happy', dur: 4000 },
 ]
 
-let seqIndex = 0
+let seqIdx = 0
 
-function cycleDogAction() {
-  const current = actionSequence[seqIndex % actionSequence.length]
-  dogAction.value = current.action
-  seqIndex++
-  dogActionTimer = setTimeout(cycleDogAction, current.duration)
+function nextAction() {
+  if (actionTimer) clearTimeout(actionTimer)
+  const cur = sequence[seqIdx % sequence.length]
+  dogAction.value = cur.a
+  seqIdx++
+  actionTimer = setTimeout(nextAction, cur.dur)
 }
 
 function nextDogAction() {
-  // Click to force next action
-  if (dogActionTimer) clearTimeout(dogActionTimer)
-  cycleDogAction()
+  if (actionTimer) clearTimeout(actionTimer)
+  nextAction()
 }
 
-// ==================== Login Handler ====================
+// ==================== Login ====================
 function handleLogin() {
   if (!email.value || !password.value) {
     errorMsg.value = '请输入邮箱和密码'
@@ -566,720 +524,307 @@ function handleLogin() {
 
 // ==================== Lifecycle ====================
 onMounted(() => {
-  initCanvas()
-  cycleDogAction()
+  initOcean()
+  nextAction()
 })
 
 onUnmounted(() => {
-  if (animationId) cancelAnimationFrame(animationId)
-  if (dogActionTimer) clearTimeout(dogActionTimer)
+  if (animId) cancelAnimationFrame(animId)
+  if (actionTimer) clearTimeout(actionTimer)
 })
 </script>
 
 <style scoped>
-/* ==================== Base ==================== */
+/* ==================== Reset ==================== */
 .login-ocean {
   position: relative;
   width: 100%;
   min-height: 100vh;
   overflow: hidden;
-  background: #030a14;
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
+  background: #02050c;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  cursor: default;
 }
 
 /* ==================== Canvas ==================== */
-.wave-canvas {
+.ocean-canvas {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 1;
+  z-index: 0;
 }
 
-/* ==================== Clouds ==================== */
-.clouds-layer {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 35%;
-  z-index: 2;
-  pointer-events: none;
-  transition: transform 0.15s ease-out;
-}
-
-.cloud {
-  position: absolute;
-  background: radial-gradient(ellipse at center, rgba(100, 160, 255, 0.08) 0%, transparent 70%);
-  border-radius: 50%;
-}
-
-.cloud-1 {
-  width: 350px;
-  height: 50px;
-  top: 15%;
-  left: -100px;
-  animation: cloudDrift 30s linear infinite;
-}
-
-.cloud-2 {
-  width: 280px;
-  height: 40px;
-  top: 22%;
-  left: -50px;
-  animation: cloudDrift 40s linear infinite 8s;
-  opacity: 0.6;
-}
-
-.cloud-3 {
-  width: 300px;
-  height: 35px;
-  top: 10%;
-  left: -150px;
-  animation: cloudDrift 35s linear infinite 15s;
-  opacity: 0.4;
-}
-
-@keyframes cloudDrift {
-  from { transform: translateX(-100%); }
-  to { transform: translateX(calc(100vw + 100%)); }
-}
-
-/* ==================== Sparkles ==================== */
-.sparkle-layer {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 50%;
-  z-index: 3;
-  pointer-events: none;
-}
-
-.sparkle {
-  position: absolute;
-  top: 15%;
-  width: 2px;
-  height: 2px;
-  background: rgba(150, 200, 255, 0.5);
-  border-radius: 50%;
-  animation: sparkleAnim 3.5s ease-in-out infinite;
-  box-shadow: 0 0 4px rgba(150, 200, 255, 0.2);
-}
-
-@keyframes sparkleAnim {
-  0%, 100% { opacity: 0; transform: translateY(0) scale(0); }
-  50% { opacity: 0.8; transform: translateY(-25px) scale(1); }
-}
-
-/* ==================== Bubbles ==================== */
-.bubbles {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 55%;
-  z-index: 3;
-  pointer-events: none;
-}
-
-.bubble {
-  position: absolute;
-  bottom: -8px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, rgba(150, 200, 255, 0.2), rgba(60, 120, 200, 0.05));
-  border: 1px solid rgba(150, 200, 255, 0.06);
-  animation: bubbleRise 9s ease-in infinite;
-}
-
-@keyframes bubbleRise {
-  0% {
-    transform: translateY(0) translateX(0) scale(0.4);
-    opacity: 0;
-  }
-  10% {
-    opacity: 0.6;
-  }
-  90% {
-    opacity: 0.3;
-  }
-  100% {
-    transform: translateY(calc(-55vh)) translateX(var(--drift, 0px)) scale(1.1);
-    opacity: 0;
-  }
-}
-
-/* ==================== Mouse Glow ==================== */
-.mouse-glow {
-  position: fixed;
-  width: 350px;
-  height: 350px;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 4;
-  background: radial-gradient(circle, rgba(100, 170, 255, 0.04) 0%, transparent 70%);
-  transform: translate(-50%, -50%);
-  transition: opacity 0.3s;
-}
-
-/* ==================== Cute White Dog ==================== */
-.dog-wrapper {
+/* ==================== Dog ==================== */
+.dog-area {
   position: relative;
-  z-index: 9;
-  display: flex;
-  justify-content: center;
-  margin-bottom: -20px;
+  z-index: 2;
+  margin-bottom: -8px;
   pointer-events: none;
 }
 
 .dog {
   position: relative;
-  width: 120px;
-  height: 120px;
+  width: 110px;
+  height: 130px;
   cursor: pointer;
   pointer-events: auto;
-  transition: transform 0.3s;
+  transition: transform 0.2s;
 }
-.dog:hover { transform: scale(1.05); }
+.dog:hover { transform: scale(1.06); }
 .dog:active { transform: scale(0.95); }
 
-/* ===== Body Base ===== */
-.dog-body {
-  position: relative;
+.dog-svg {
   width: 100%;
   height: 100%;
+  overflow: visible;
 }
 
-/* ===== Torso ===== */
-.dog-torso {
-  position: absolute;
-  bottom: 18px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 64px;
-  height: 48px;
-  background: radial-gradient(ellipse at 50% 60%, #f0f0f5, #e0e0e8 60%, #d0d0da 100%);
-  border-radius: 50% 50% 45% 45%;
-  box-shadow: inset -4px -4px 10px rgba(0,0,0,0.06), inset 4px 4px 10px rgba(255,255,255,0.8);
-  transition: all 0.5s;
-}
-
-/* ===== Tail ===== */
-.dog-tail {
-  position: absolute;
-  bottom: 48px;
-  left: 50%;
-  margin-left: 28px;
-  width: 18px;
-  height: 22px;
-  transform-origin: bottom center;
-  z-index: 1;
-}
-.tail-tip {
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(ellipse at 50% 30%, #f5f5fa, #e0e0e8 60%);
-  border-radius: 0 0 10px 10px;
-  clip-path: polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%);
-}
-
-/* ===== Head ===== */
-.dog-head {
-  position: absolute;
-  top: 6px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 52px;
-  height: 46px;
-  z-index: 3;
-  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.face {
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(ellipse at 50% 45%, #f5f5fa, #e8e8f0 50%, #dddde8 100%);
-  border-radius: 50%;
-  position: relative;
-  box-shadow:
-    inset -3px -3px 8px rgba(0,0,0,0.05),
-    inset 3px 3px 8px rgba(255,255,255,0.7);
-}
-
-/* Ears */
-.ear {
-  position: absolute;
-  top: -4px;
-  width: 18px;
-  height: 24px;
-  background: radial-gradient(ellipse at 50% 60%, #e8e8f0, #d0d0dc 60%, #c0c0ce 100%);
-  border-radius: 50%;
-  z-index: -1;
-  transform-origin: top center;
-  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-.ear-left { left: -6px; transform: rotate(-10deg); }
-.ear-right { right: -6px; transform: rotate(10deg); }
-
-/* Eyes */
-.eye {
-  position: absolute;
-  top: 16px;
-  width: 6px;
-  height: 7px;
-}
-.eye-left { left: 13px; }
-.eye-right { right: 13px; }
-
-.eyeball {
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(circle at 40% 35%, #444, #1a1a2e 60%, #000);
-  border-radius: 50%;
-  transition: all 0.3s;
-}
-.eyeball::after {
-  content: '';
-  position: absolute;
-  top: 1px;
-  left: 1.5px;
-  width: 2px;
-  height: 2px;
-  background: rgba(255,255,255,0.8);
-  border-radius: 50%;
-}
-
-.eyelid {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 0%;
-  background: #e8e8f0;
-  border-radius: 50%;
-  transition: height 0.4s;
-}
-
-/* Nose */
-.nose {
-  position: absolute;
-  bottom: 11px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 10px;
-  height: 8px;
-  background: radial-gradient(circle at 40% 35%, #555, #222 60%, #000);
-  border-radius: 50% 50% 40% 40%;
-}
-.nose-highlight {
-  position: absolute;
-  top: 1px;
-  left: 2px;
-  width: 3px;
-  height: 2px;
-  background: rgba(255,255,255,0.4);
-  border-radius: 50%;
-}
-
-/* Mouth */
-.mouth {
-  position: absolute;
-  bottom: 4px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 14px;
-  height: 6px;
-  display: flex;
-  justify-content: center;
-}
-.mouth::after {
-  content: '';
-  display: block;
-  width: 10px;
-  height: 5px;
-  border-bottom: 2px solid rgba(50,40,60,0.25);
-  border-radius: 0 0 50% 50%;
-}
-
-/* Tongue */
-.tongue {
-  position: absolute;
-  bottom: -3px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 5px;
-  height: 0;
-  background: radial-gradient(ellipse at 50% 60%, #ff8899, #ee6688);
-  border-radius: 0 0 4px 4px;
-  transition: height 0.3s;
-}
-
-/* Blush */
-.blush {
-  position: absolute;
-  top: 24px;
-  width: 8px;
-  height: 5px;
-  border-radius: 50%;
-  opacity: 0;
-  transition: opacity 0.4s;
-}
-.blush-left { left: 4px; background: rgba(255, 150, 150, 0.25); }
-.blush-right { right: 4px; background: rgba(255, 150, 150, 0.25); }
-
-/* ===== Legs ===== */
-.leg {
-  position: absolute;
-  width: 24px;
-  height: 16px;
-  background: radial-gradient(ellipse at 50% 40%, #e8e8f0, #d0d0dc 60%);
-}
-.front-legs {
-  position: absolute;
-  bottom: 2px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 50px;
-  display: flex;
-  justify-content: space-between;
-}
-.front-leg {
-  width: 16px;
-  height: 18px;
-  border-radius: 4px 4px 6px 6px;
-}
-.front-left { left: 2px; }
-.front-right { right: 2px; }
-
-.back-leg {
-  bottom: -4px;
-  left: -4px;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: radial-gradient(ellipse at 50% 50%, #dddde6, #c8c8d4);
-}
-
-.scratch-leg {
-  bottom: -2px;
-  right: -4px;
-  width: 18px;
-  height: 14px;
-  border-radius: 40%;
-  transform-origin: top center;
-  opacity: 0;
-  background: radial-gradient(ellipse at 50% 60%, #e0e0ea, #c8c8d4);
-}
-
-.paw {
-  position: absolute;
-  bottom: -2px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 8px;
-  height: 5px;
-  background: radial-gradient(ellipse, #d5d5e0, #c0c0ce);
-  border-radius: 50%;
-}
-
-/* ===== Action Label ===== */
 .action-label {
   position: absolute;
-  bottom: -22px;
+  bottom: -6px;
   left: 50%;
   transform: translateX(-50%);
   font-size: 11px;
-  color: rgba(180, 212, 255, 0.5);
+  color: rgba(180, 210, 255, 0.5);
   white-space: nowrap;
-  letter-spacing: 0.02em;
-  transition: opacity 0.3s;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+  text-align: center;
+}
+
+/* ===== Dog Animations ===== */
+
+/* --- IDLE: tail wag + gentle breath --- */
+.dog-idle .dog-tail-group {
+  animation: tailWag 0.7s ease-in-out infinite alternate;
+  transform-origin: 148px 108px;
+}
+.dog-idle .dog-tongue { opacity: 0.6; }
+.dog-idle .blush { opacity: 0.3; }
+
+@keyframes tailWag {
+  0% { transform: rotate(-8deg); }
+  100% { transform: rotate(16deg); }
+}
+
+/* --- LOOK: head turn --- */
+.dog-look .dog-head-group {
+  animation: headSway 4s ease-in-out infinite;
+  transform-origin: 98px 92px;
+}
+.dog-look .dog-ear {
+  animation: earBounce 2s ease-in-out infinite alternate;
+}
+.dog-look .blush { opacity: 0.35; }
+.dog-look .dog-tongue { opacity: 0.5; }
+
+@keyframes headSway {
+  0% { transform: rotate(0deg); }
+  18% { transform: rotate(18deg); }
+  45% { transform: rotate(-14deg); }
+  72% { transform: rotate(10deg); }
+  100% { transform: rotate(0deg); }
+}
+@keyframes earBounce {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(8deg); }
+}
+
+/* --- SCRATCH --- */
+.dog-scratch .scratch-leg-group {
+  animation: scratchMove 0.35s ease-in-out infinite alternate;
+  transform-origin: 130px 160px;
+}
+.dog-scratch .dog-head-group {
+  animation: headTilt 0.35s ease-in-out infinite alternate;
+  transform-origin: 98px 92px;
+}
+.dog-scratch .blush { opacity: 0.4; }
+.dog-scratch .dog-tongue { opacity: 0.7; }
+.dog-scratch .dog-mouth { stroke: rgba(80,60,80,0.4); }
+
+@keyframes scratchMove {
+  0% { transform: rotate(0deg) translateY(0); }
+  100% { transform: rotate(-35deg) translateY(-5px); }
+}
+@keyframes headTilt {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(15deg); }
+}
+
+/* --- SLEEP --- */
+.dog-sleep .eyelid-l,
+.dog-sleep .eyelid-r {
+  opacity: 1 !important;
+}
+.dog-sleep .dog-ear {
+  transform: rotate(0deg);
+  animation: none;
+}
+.dog-sleep .dog-tail-group {
+  animation: none;
+  transform: rotate(0deg);
+}
+.dog-sleep .dog-head-group {
+  animation: sleepNod 4s ease-in-out infinite;
+  transform-origin: 98px 92px;
+}
+.dog-sleep .eyelid-l,
+.dog-sleep .eyelid-r {
+  animation: none;
+}
+.dog-sleep .blush { opacity: 0; }
+.dog-sleep .dog-tongue { opacity: 0.2; }
+.dog-sleep .dog-mouth { stroke: rgba(80,60,80,0.12); }
+
+@keyframes sleepNod {
+  0%, 100% { transform: rotate(0deg) translateY(0); }
+  25% { transform: rotate(4deg) translateY(2px); }
+  75% { transform: rotate(-3deg) translateY(1px); }
+}
+
+/* --- HAPPY --- */
+.dog-happy .dog {
+  animation: bounce 0.45s ease-in-out infinite alternate;
+}
+.dog-happy .dog-tail-group {
+  animation: tailWagFast 0.15s ease-in-out infinite alternate;
+  transform-origin: 148px 108px;
+}
+.dog-happy .dog-head-group {
+  animation: happyWiggle 0.3s ease-in-out infinite alternate;
+  transform-origin: 98px 92px;
+}
+.dog-happy .blush { opacity: 0.5; }
+.dog-happy .dog-tongue { opacity: 1; }
+
+@keyframes bounce {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-6px); }
+}
+@keyframes tailWagFast {
+  0% { transform: rotate(-12deg); }
+  100% { transform: rotate(20deg); }
+}
+@keyframes happyWiggle {
+  0% { transform: rotate(-4deg); }
+  100% { transform: rotate(4deg); }
 }
 
 /* ===== Zzz ===== */
-.zzz-container {
+.zzz-box {
   position: absolute;
-  top: -8px;
-  right: -20px;
+  top: -18px;
+  right: -10px;
+  pointer-events: none;
 }
-.zzz {
-  position: absolute;
-  font-size: 14px;
-  color: rgba(180, 212, 255, 0.5);
+.dog-sleep .zzz {
+  display: inline-block;
+  font-size: 16px;
+  color: rgba(180, 210, 255, 0.5);
   font-weight: 300;
-  animation: zzzFloat 2.5s ease-out infinite;
-  opacity: 0;
+  position: absolute;
+  right: 0;
+  animation: zzzUp 2.2s ease-out infinite;
 }
-.z1 { right: 0; top: 0; animation-delay: 0s; }
-.z2 { right: 8px; top: -8px; font-size: 18px; animation-delay: 0.5s; }
-.z3 { right: 18px; top: -16px; font-size: 22px; animation-delay: 1s; }
+.dog-sleep .zzz:nth-child(1) { animation-delay: 0s; top: 0; }
+.dog-sleep .zzz:nth-child(2) { animation-delay: 0.7s; top: -10px; font-size: 20px; }
+.dog-sleep .zzz:nth-child(3) { animation-delay: 1.4s; top: -20px; font-size: 24px; }
 
-@keyframes zzzFloat {
+@keyframes zzzUp {
   0% { opacity: 0; transform: translateY(0) scale(0.5); }
-  20% { opacity: 1; }
-  100% { opacity: 0; transform: translateY(-30px) translateX(10px) scale(1.5); }
+  25% { opacity: 0.8; }
+  100% { opacity: 0; transform: translateY(-35px) translateX(12px) scale(1.5); }
 }
 
 /* ===== Hearts ===== */
-.hearts-container {
+.hearts-box {
   position: absolute;
-  top: -10px;
+  top: -22px;
   left: 50%;
   transform: translateX(-50%);
+  pointer-events: none;
 }
-.heart {
+.dog-happy .heart {
+  display: inline-block;
+  font-size: 14px;
+  color: rgba(255, 120, 160, 0.7);
   position: absolute;
-  font-size: 12px;
-  color: rgba(255, 120, 150, 0.6);
-  animation: heartFloat 1.5s ease-out infinite;
-  opacity: 0;
+  animation: heartPop 1.2s ease-out infinite;
 }
-.h1 { left: -10px; animation-delay: 0s; }
-.h2 { left: -2px; animation-delay: 0.3s; font-size: 14px; }
-.h3 { left: 8px; animation-delay: 0.6s; }
+.dog-happy .heart:nth-child(1) { left: -14px; animation-delay: 0s; }
+.dog-happy .heart:nth-child(2) { left: -4px; font-size: 18px; animation-delay: 0.25s; }
+.dog-happy .heart:nth-child(3) { left: 8px; animation-delay: 0.5s; }
 
-@keyframes heartFloat {
-  0% { opacity: 0; transform: translateY(0) scale(0.5); }
-  30% { opacity: 1; transform: translateY(-8px) scale(1.2); }
-  100% { opacity: 0; transform: translateY(-25px) scale(0.8); }
-}
-
-/* ============================================================
-   ACTION ANIMATIONS
-   ============================================================ */
-
-/* --- IDLE: Tail wag + gentle breathing --- */
-.action-idle .dog-tail {
-  animation: tailWag 0.6s ease-in-out infinite alternate;
-}
-.action-idle .dog-torso {
-  animation: breathe 2s ease-in-out infinite;
-}
-.action-idle .blush { opacity: 0.4; }
-.action-idle .tongue { height: 3px; }
-
-@keyframes tailWag {
-  0% { transform: rotate(10deg) scaleX(0.9); }
-  100% { transform: rotate(-15deg) scaleX(1); }
-}
-@keyframes breathe {
-  0%, 100% { transform: translateX(-50%) scaleY(1); }
-  50% { transform: translateX(-50%) scaleY(1.03); }
-}
-
-/* --- LOOK: Head turns side to side --- */
-.action-look .dog-head {
-  animation: headTurn 4s ease-in-out infinite;
-}
-.action-look .ear-left { animation: earFlopL 2s ease-in-out infinite alternate; }
-.action-look .ear-right { animation: earFlopR 2s ease-in-out infinite alternate; }
-.action-look .blush { opacity: 0.5; }
-.action-look .tongue { height: 4px; }
-
-@keyframes headTurn {
-  0% { transform: translateX(-50%) rotate(0deg); }
-  20% { transform: translateX(-50%) rotate(15deg); }
-  50% { transform: translateX(-50%) rotate(-12deg); }
-  75% { transform: translateX(-50%) rotate(8deg); }
-  100% { transform: translateX(-50%) rotate(0deg); }
-}
-@keyframes earFlopL {
-  0% { transform: rotate(-10deg); }
-  100% { transform: rotate(-25deg); }
-}
-@keyframes earFlopR {
-  0% { transform: rotate(10deg); }
-  100% { transform: rotate(25deg); }
-}
-
-/* --- SCRATCH: Hind leg scratches ear --- */
-.action-scratch .dog-head {
-  animation: headTilt 0.8s ease-in-out infinite alternate;
-}
-.action-scratch .scratch-leg {
-  opacity: 1;
-  animation: scratchMove 0.4s ease-in-out infinite alternate;
-}
-.action-scratch .dog-torso {
-  animation: scratchBounce 0.4s ease-in-out infinite alternate;
-}
-.action-scratch .ear-right {
-  animation: none;
-  transform: rotate(40deg);
-}
-.action-scratch .blush { opacity: 0.6; }
-.action-scratch .tongue { height: 5px; }
-
-@keyframes headTilt {
-  0% { transform: translateX(-50%) rotate(0deg); }
-  100% { transform: translateX(-50%) rotate(20deg); }
-}
-@keyframes scratchMove {
-  0% { transform: rotate(0deg) translateY(0); }
-  100% { transform: rotate(-30deg) translateY(-4px); }
-}
-@keyframes scratchBounce {
-  0% { transform: translateX(-50%) translateY(0); }
-  100% { transform: translateX(-50%) translateY(-2px); }
-}
-
-/* --- SLEEP: Eyes close, relax --- */
-.action-sleep .eyelid {
-  height: 100%;
-}
-.action-sleep .dog-tail {
-  animation: none;
-  transform: rotate(0deg) scaleY(0.6);
-}
-.action-sleep .dog-head {
-  animation: sleepBob 4s ease-in-out infinite;
-}
-.action-sleep .dog-torso {
-  animation: sleepBreathe 3s ease-in-out infinite;
-}
-.action-sleep .ear-left {
-  transform: rotate(-20deg);
-  animation: none;
-}
-.action-sleep .ear-right {
-  transform: rotate(20deg);
-  animation: none;
-}
-.action-sleep .blush { opacity: 0; }
-.action-sleep .tongue { height: 2px; }
-.action-sleep .mouth::after {
-  border-bottom-color: rgba(50,40,60,0.12);
-}
-.action-sleep .face {
-  box-shadow:
-    inset -2px -2px 6px rgba(0,0,0,0.03),
-    inset 2px 2px 6px rgba(255,255,255,0.5);
-}
-
-@keyframes sleepBob {
-  0%, 100% { transform: translateX(-50%) translateY(0) rotate(0deg); }
-  25% { transform: translateX(-50%) translateY(2px) rotate(3deg); }
-  75% { transform: translateX(-50%) translateY(1px) rotate(-2deg); }
-}
-@keyframes sleepBreathe {
-  0%, 100% { transform: translateX(-50%) scaleY(1); }
-  50% { transform: translateX(-50%) scaleY(1.02); }
-}
-
-/* --- HAPPY: Bounce + fast tail wag --- */
-.action-happy .dog {
-  animation: happyBounce 0.5s ease-in-out infinite alternate;
-}
-.action-happy .dog-tail {
-  animation: tailWagFast 0.2s ease-in-out infinite alternate;
-}
-.action-happy .dog-torso {
-  animation: breathe 0.8s ease-in-out infinite;
-}
-.action-happy .ear-left { animation: earFlopL 0.5s ease-in-out infinite alternate; }
-.action-happy .ear-right { animation: earFlopR 0.5s ease-in-out infinite alternate; }
-.action-happy .blush { opacity: 0.7; }
-.action-happy .tongue { height: 6px; }
-.action-happy .mouth::after {
-  width: 12px;
-  border-bottom: 2.5px solid rgba(50,40,60,0.3);
-}
-.action-happy .eyeball {
-  animation: happyEyes 0.3s ease-in-out infinite alternate;
-}
-
-@keyframes happyBounce {
-  0% { transform: translateY(0); }
-  100% { transform: translateY(-8px); }
-}
-@keyframes tailWagFast {
-  0% { transform: rotate(20deg) scaleX(0.8); }
-  100% { transform: rotate(-25deg) scaleX(1.1); }
-}
-@keyframes happyEyes {
-  0% { transform: scaleY(1); }
-  100% { transform: scaleY(0.6); }
+@keyframes heartPop {
+  0% { opacity: 0; transform: translateY(0) scale(0.4); }
+  25% { opacity: 1; transform: translateY(-6px) scale(1.2); }
+  100% { opacity: 0; transform: translateY(-24px) scale(0.6); }
 }
 
 /* ==================== Login Card ==================== */
 .login-card-wrapper {
   position: relative;
-  z-index: 10;
-  transition: transform 0.1s ease-out;
+  z-index: 3;
+  transition: transform 0.08s ease-out;
 }
 
 .login-card {
   position: relative;
-  width: 400px;
-  padding: 40px;
-  background: rgba(8, 14, 36, 0.6);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border-radius: 24px;
-  border: 1px solid rgba(100, 170, 255, 0.1);
-  box-shadow:
-    0 8px 40px rgba(0, 0, 0, 0.4),
-    0 2px 8px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(100, 170, 255, 0.06);
+  width: 380px;
+  border-radius: 20px;
   overflow: hidden;
 }
 
-.card-border-glow {
+.card-bg {
   position: absolute;
-  top: -1px;
-  left: -1px;
-  right: -1px;
-  bottom: -1px;
-  border-radius: 25px;
-  background: linear-gradient(135deg,
-    rgba(100, 170, 255, 0.15),
-    transparent 35%,
-    rgba(60, 120, 200, 0.08) 70%,
-    rgba(100, 170, 255, 0.05)
-  );
-  z-index: -1;
-  opacity: 0.4;
-  transition: opacity 0.4s;
+  inset: 0;
+  background: rgba(6, 12, 30, 0.55);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  border: 1px solid rgba(100, 170, 255, 0.08);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.35);
 }
 
-.login-card:hover .card-border-glow {
-  opacity: 0.8;
+.card-content {
+  position: relative;
+  padding: 36px 36px 28px;
 }
 
-/* Card Header */
 .card-header {
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: 28px;
 }
 
 .avatar {
-  width: 52px;
-  height: 52px;
+  width: 44px;
+  height: 44px;
+  margin: 0 auto 14px;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(100, 170, 255, 0.15), rgba(40, 80, 160, 0.15));
-  border: 1px solid rgba(100, 170, 255, 0.12);
+  background: rgba(100, 170, 255, 0.08);
+  border: 1px solid rgba(100, 170, 255, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 16px;
-  color: rgba(180, 212, 255, 0.7);
+  color: rgba(180, 212, 255, 0.5);
 }
 
 .card-header h2 {
-  font-size: 24px;
-  font-weight: 700;
-  color: #d0e0ff;
+  font-size: 22px;
+  font-weight: 600;
+  color: #d8e8ff;
   margin: 0 0 4px;
   letter-spacing: -0.01em;
 }
-
 .card-header p {
-  font-size: 14px;
-  color: rgba(150, 190, 240, 0.45);
+  font-size: 13px;
+  color: rgba(150, 190, 240, 0.35);
   margin: 0;
 }
 
@@ -1287,252 +832,163 @@ onUnmounted(() => {
 .login-form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  gap: 16px;
 }
 
 .form-group label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
+  display: block;
+  font-size: 12px;
   font-weight: 500;
-  color: rgba(150, 190, 240, 0.5);
+  color: rgba(150, 190, 240, 0.4);
+  margin-bottom: 4px;
   transition: color 0.3s;
 }
-
 .form-group.focused label {
-  color: #8ab4ff;
+  color: rgba(150, 200, 255, 0.7);
 }
 
 .input-wrapper {
   position: relative;
 }
-
 .input-wrapper input {
   width: 100%;
-  padding: 12px 14px;
-  background: rgba(10, 20, 48, 0.5);
-  border: 1px solid rgba(100, 170, 255, 0.1);
-  border-radius: 12px;
-  color: #d0e0ff;
-  font-size: 15px;
+  padding: 11px 14px;
+  background: rgba(10, 20, 48, 0.4);
+  border: 1px solid rgba(100, 170, 255, 0.08);
+  border-radius: 10px;
+  color: #d8e8ff;
+  font-size: 14px;
   outline: none;
-  transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
   box-sizing: border-box;
+  transition: border-color 0.3s, background 0.3s;
 }
-
 .input-wrapper input::placeholder {
-  color: rgba(100, 160, 230, 0.2);
+  color: rgba(100, 150, 220, 0.18);
 }
-
 .form-group.focused .input-wrapper input {
-  border-color: rgba(100, 170, 255, 0.4);
-  background: rgba(12, 24, 54, 0.6);
-  box-shadow: 0 0 24px rgba(100, 170, 255, 0.05);
-}
-
-.input-glow {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  border-radius: 12px;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.3s;
-  box-shadow: 0 0 30px rgba(100, 170, 255, 0.06);
-}
-
-.form-group.focused .input-glow {
-  opacity: 1;
+  border-color: rgba(100, 170, 255, 0.25);
+  background: rgba(12, 22, 52, 0.5);
 }
 
 .toggle-pw {
   position: absolute;
-  right: 10px;
+  right: 8px;
   top: 50%;
   transform: translateY(-50%);
   background: none;
   border: none;
-  color: rgba(100, 170, 255, 0.3);
+  color: rgba(100, 170, 255, 0.2);
   cursor: pointer;
   padding: 4px;
-  transition: color 0.2s;
+  display: flex;
 }
+.toggle-pw:hover { color: rgba(100, 170, 255, 0.4); }
 
-.toggle-pw:hover {
-  color: rgba(150, 200, 255, 0.5);
-}
-
-/* Form options */
+/* Options */
 .form-options {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 13px;
+  font-size: 12px;
 }
-
 .remember-me {
   display: flex;
   align-items: center;
-  gap: 8px;
-  color: rgba(150, 190, 240, 0.4);
+  gap: 6px;
+  color: rgba(150, 190, 240, 0.35);
   cursor: pointer;
-  user-select: none;
 }
-
-.remember-me input {
-  display: none;
-}
-
+.remember-me input { display: none; }
 .checkmark {
-  width: 16px;
-  height: 16px;
-  border: 1px solid rgba(100, 170, 255, 0.2);
-  border-radius: 4px;
+  width: 14px;
+  height: 14px;
+  border: 1px solid rgba(100, 170, 255, 0.15);
+  border-radius: 3px;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
-  position: relative;
 }
-
 .remember-me input:checked + .checkmark {
-  background: #5a90e0;
-  border-color: #5a90e0;
+  background: rgba(100, 170, 255, 0.5);
+  border-color: rgba(100, 170, 255, 0.5);
 }
-
 .remember-me input:checked + .checkmark::after {
   content: '';
-  width: 4px;
-  height: 8px;
-  border: solid #050714;
-  border-width: 0 2px 2px 0;
+  width: 3px;
+  height: 6px;
+  border: solid rgba(6,12,30,0.9);
+  border-width: 0 1.5px 1.5px 0;
   transform: rotate(45deg);
-  position: absolute;
-  top: 1px;
 }
-
 .forgot-link {
-  color: rgba(100, 170, 255, 0.35);
+  color: rgba(100, 170, 255, 0.3);
   text-decoration: none;
   transition: color 0.2s;
 }
+.forgot-link:hover { color: rgba(100, 170, 255, 0.6); }
 
-.forgot-link:hover {
-  color: #8ab4ff;
-}
-
-/* Login Button */
+/* Button */
 .login-btn {
-  padding: 14px;
-  background: linear-gradient(135deg, #4a82d4 0%, #2a5aae 50%, #1a4a96 100%);
-  border: none;
-  border-radius: 12px;
-  color: #d0e8ff;
-  font-size: 16px;
-  font-weight: 600;
+  padding: 12px;
+  background: linear-gradient(135deg, rgba(60, 130, 220, 0.7), rgba(40, 90, 180, 0.7));
+  border: 1px solid rgba(100, 170, 255, 0.15);
+  border-radius: 10px;
+  color: #d8e8ff;
+  font-size: 15px;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s;
-  position: relative;
-  overflow: hidden;
+  transition: all 0.25s;
+  letter-spacing: 0.06em;
 }
-
-.login-btn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(180, 212, 255, 0.12), transparent);
-  transition: left 0.5s;
-}
-
-.login-btn:hover::before {
-  left: 100%;
-}
-
 .login-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 28px rgba(74, 130, 212, 0.3);
+  background: linear-gradient(135deg, rgba(70, 140, 230, 0.8), rgba(50, 100, 195, 0.8));
+  border-color: rgba(100, 170, 255, 0.25);
+  box-shadow: 0 4px 20px rgba(60, 130, 220, 0.15);
 }
-
-.login-btn:active {
-  transform: translateY(0);
-}
-
-.login-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
+.login-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .loading-spinner {
   display: inline-block;
-  width: 20px;
-  height: 20px;
-  border: 2px solid rgba(150, 200, 255, 0.2);
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(180, 212, 255, 0.15);
   border-top-color: #8ab4ff;
   border-radius: 50%;
-  animation: spin 0.6s linear infinite;
+  animation: spin 0.5s linear infinite;
 }
+@keyframes spin { to { transform: rotate(360deg); } }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* Error message */
 .error-message {
   text-align: center;
-  font-size: 13px;
+  font-size: 12px;
   color: #ff7b7b;
-  padding: 8px;
-  background: rgba(255, 80, 80, 0.08);
-  border-radius: 8px;
-  border: 1px solid rgba(255, 80, 80, 0.1);
+  padding: 6px;
+  background: rgba(255, 80, 80, 0.06);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 80, 80, 0.08);
 }
 
-/* Card Footer */
+/* Footer */
 .card-footer {
   text-align: center;
-  margin-top: 24px;
-  padding-top: 20px;
-  border-top: 1px solid rgba(100, 170, 255, 0.06);
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(100, 170, 255, 0.05);
+  font-size: 12px;
+  color: rgba(150, 190, 240, 0.3);
 }
-
-.card-footer p {
-  font-size: 13px;
-  color: rgba(150, 190, 240, 0.35);
-  margin: 0;
-}
-
 .card-footer a {
-  color: #8ab4ff;
+  color: rgba(150, 200, 255, 0.5);
   text-decoration: none;
   transition: color 0.2s;
 }
+.card-footer a:hover { color: rgba(150, 200, 255, 0.8); }
 
-.card-footer a:hover {
-  color: #b8d4ff;
-}
-
-/* ==================== Responsive ==================== */
+/* Responsive */
 @media (max-width: 480px) {
-  .login-card {
-    width: calc(100vw - 40px);
-    padding: 28px 24px;
-  }
-}
-
-/* ==================== Scrollbar ==================== */
-.login-ocean ::-webkit-scrollbar {
-  display: none;
+  .login-card { width: calc(100vw - 36px); }
+  .card-content { padding: 28px 24px 24px; }
+  .dog { width: 90px; height: 106px; }
 }
 </style>
