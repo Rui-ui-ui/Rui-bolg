@@ -25,6 +25,66 @@
       ></div>
     </div>
 
+    <!-- Cute White Dog -->
+    <div class="dog-wrapper">
+      <div class="dog" :class="dogActionClass" @click="nextDogAction">
+        <div class="dog-body">
+          <!-- Tail -->
+          <div class="dog-tail">
+            <div class="tail-tip"></div>
+          </div>
+
+          <!-- Body -->
+          <div class="dog-torso">
+            <div class="leg back-leg"><div class="paw"></div></div>
+            <div class="leg scratch-leg"><div class="paw"></div></div>
+          </div>
+
+          <!-- Head -->
+          <div class="dog-head">
+            <div class="ear ear-left"></div>
+            <div class="ear ear-right"></div>
+            <div class="face">
+              <div class="eye eye-left">
+                <div class="eyeball"></div>
+                <div class="eyelid"></div>
+              </div>
+              <div class="eye eye-right">
+                <div class="eyeball"></div>
+                <div class="eyelid"></div>
+              </div>
+              <div class="nose"><div class="nose-highlight"></div></div>
+              <div class="mouth"><div class="tongue"></div></div>
+              <div class="blush blush-left"></div>
+              <div class="blush blush-right"></div>
+            </div>
+          </div>
+
+          <!-- Front legs -->
+          <div class="front-legs">
+            <div class="leg front-leg front-left"><div class="paw"></div></div>
+            <div class="leg front-leg front-right"><div class="paw"></div></div>
+          </div>
+        </div>
+
+        <div class="action-label">{{ currentActionLabel }}</div>
+
+        <!-- Zzz for sleeping -->
+        <div class="zzz-container" v-show="dogAction === 'sleep'">
+          <span class="zzz z1">z</span>
+          <span class="zzz z2">z</span>
+          <span class="zzz z3">z</span>
+        </div>
+
+        <!-- Hearts for happy -->
+        <div class="hearts-container" v-show="dogAction === 'happy'">
+          <span class="heart h1">♥</span>
+          <span class="heart h2">♥</span>
+          <span class="heart h3">♥</span>
+        </div>
+      </div>
+    </div>
+
     <!-- Login card -->
     <div class="login-card-wrapper" :style="cardParallaxStyle">
       <div class="login-card" ref="loginCardRef">
@@ -449,6 +509,47 @@ function sparkleStyle(n: number) {
   }
 }
 
+// ==================== Dog Action System ====================
+const dogAction = ref<'idle'|'look'|'scratch'|'sleep'|'happy'>('idle')
+const dogActionClass = computed(() => `action-${dogAction.value}`)
+
+const actionLabels: Record<string, string> = {
+  idle: '摇尾巴~',
+  look: '左看看右看看🤔',
+  scratch: '挠痒痒🐾',
+  sleep: 'Zzz 睡着了💤',
+  happy: '好开心！♥',
+}
+const currentActionLabel = computed(() => actionLabels[dogAction.value])
+
+let dogActionTimer: ReturnType<typeof setTimeout> | null = null
+
+const actionSequence = [
+  { action: 'idle' as const, duration: 5000 },
+  { action: 'look' as const, duration: 4500 },
+  { action: 'idle' as const, duration: 3000 },
+  { action: 'scratch' as const, duration: 4000 },
+  { action: 'idle' as const, duration: 4000 },
+  { action: 'sleep' as const, duration: 6000 },
+  { action: 'idle' as const, duration: 3000 },
+  { action: 'happy' as const, duration: 4000 },
+]
+
+let seqIndex = 0
+
+function cycleDogAction() {
+  const current = actionSequence[seqIndex % actionSequence.length]
+  dogAction.value = current.action
+  seqIndex++
+  dogActionTimer = setTimeout(cycleDogAction, current.duration)
+}
+
+function nextDogAction() {
+  // Click to force next action
+  if (dogActionTimer) clearTimeout(dogActionTimer)
+  cycleDogAction()
+}
+
 // ==================== Login Handler ====================
 function handleLogin() {
   if (!email.value || !password.value) {
@@ -466,10 +567,12 @@ function handleLogin() {
 // ==================== Lifecycle ====================
 onMounted(() => {
   initCanvas()
+  cycleDogAction()
 })
 
 onUnmounted(() => {
   if (animationId) cancelAnimationFrame(animationId)
+  if (dogActionTimer) clearTimeout(dogActionTimer)
 })
 </script>
 
@@ -622,6 +725,484 @@ onUnmounted(() => {
   background: radial-gradient(circle, rgba(100, 170, 255, 0.04) 0%, transparent 70%);
   transform: translate(-50%, -50%);
   transition: opacity 0.3s;
+}
+
+/* ==================== Cute White Dog ==================== */
+.dog-wrapper {
+  position: relative;
+  z-index: 9;
+  display: flex;
+  justify-content: center;
+  margin-bottom: -20px;
+  pointer-events: none;
+}
+
+.dog {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: transform 0.3s;
+}
+.dog:hover { transform: scale(1.05); }
+.dog:active { transform: scale(0.95); }
+
+/* ===== Body Base ===== */
+.dog-body {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* ===== Torso ===== */
+.dog-torso {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 64px;
+  height: 48px;
+  background: radial-gradient(ellipse at 50% 60%, #f0f0f5, #e0e0e8 60%, #d0d0da 100%);
+  border-radius: 50% 50% 45% 45%;
+  box-shadow: inset -4px -4px 10px rgba(0,0,0,0.06), inset 4px 4px 10px rgba(255,255,255,0.8);
+  transition: all 0.5s;
+}
+
+/* ===== Tail ===== */
+.dog-tail {
+  position: absolute;
+  bottom: 48px;
+  left: 50%;
+  margin-left: 28px;
+  width: 18px;
+  height: 22px;
+  transform-origin: bottom center;
+  z-index: 1;
+}
+.tail-tip {
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(ellipse at 50% 30%, #f5f5fa, #e0e0e8 60%);
+  border-radius: 0 0 10px 10px;
+  clip-path: polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%);
+}
+
+/* ===== Head ===== */
+.dog-head {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 52px;
+  height: 46px;
+  z-index: 3;
+  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.face {
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(ellipse at 50% 45%, #f5f5fa, #e8e8f0 50%, #dddde8 100%);
+  border-radius: 50%;
+  position: relative;
+  box-shadow:
+    inset -3px -3px 8px rgba(0,0,0,0.05),
+    inset 3px 3px 8px rgba(255,255,255,0.7);
+}
+
+/* Ears */
+.ear {
+  position: absolute;
+  top: -4px;
+  width: 18px;
+  height: 24px;
+  background: radial-gradient(ellipse at 50% 60%, #e8e8f0, #d0d0dc 60%, #c0c0ce 100%);
+  border-radius: 50%;
+  z-index: -1;
+  transform-origin: top center;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.ear-left { left: -6px; transform: rotate(-10deg); }
+.ear-right { right: -6px; transform: rotate(10deg); }
+
+/* Eyes */
+.eye {
+  position: absolute;
+  top: 16px;
+  width: 6px;
+  height: 7px;
+}
+.eye-left { left: 13px; }
+.eye-right { right: 13px; }
+
+.eyeball {
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 40% 35%, #444, #1a1a2e 60%, #000);
+  border-radius: 50%;
+  transition: all 0.3s;
+}
+.eyeball::after {
+  content: '';
+  position: absolute;
+  top: 1px;
+  left: 1.5px;
+  width: 2px;
+  height: 2px;
+  background: rgba(255,255,255,0.8);
+  border-radius: 50%;
+}
+
+.eyelid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 0%;
+  background: #e8e8f0;
+  border-radius: 50%;
+  transition: height 0.4s;
+}
+
+/* Nose */
+.nose {
+  position: absolute;
+  bottom: 11px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 10px;
+  height: 8px;
+  background: radial-gradient(circle at 40% 35%, #555, #222 60%, #000);
+  border-radius: 50% 50% 40% 40%;
+}
+.nose-highlight {
+  position: absolute;
+  top: 1px;
+  left: 2px;
+  width: 3px;
+  height: 2px;
+  background: rgba(255,255,255,0.4);
+  border-radius: 50%;
+}
+
+/* Mouth */
+.mouth {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 14px;
+  height: 6px;
+  display: flex;
+  justify-content: center;
+}
+.mouth::after {
+  content: '';
+  display: block;
+  width: 10px;
+  height: 5px;
+  border-bottom: 2px solid rgba(50,40,60,0.25);
+  border-radius: 0 0 50% 50%;
+}
+
+/* Tongue */
+.tongue {
+  position: absolute;
+  bottom: -3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 5px;
+  height: 0;
+  background: radial-gradient(ellipse at 50% 60%, #ff8899, #ee6688);
+  border-radius: 0 0 4px 4px;
+  transition: height 0.3s;
+}
+
+/* Blush */
+.blush {
+  position: absolute;
+  top: 24px;
+  width: 8px;
+  height: 5px;
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+.blush-left { left: 4px; background: rgba(255, 150, 150, 0.25); }
+.blush-right { right: 4px; background: rgba(255, 150, 150, 0.25); }
+
+/* ===== Legs ===== */
+.leg {
+  position: absolute;
+  width: 24px;
+  height: 16px;
+  background: radial-gradient(ellipse at 50% 40%, #e8e8f0, #d0d0dc 60%);
+}
+.front-legs {
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50px;
+  display: flex;
+  justify-content: space-between;
+}
+.front-leg {
+  width: 16px;
+  height: 18px;
+  border-radius: 4px 4px 6px 6px;
+}
+.front-left { left: 2px; }
+.front-right { right: 2px; }
+
+.back-leg {
+  bottom: -4px;
+  left: -4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 50%, #dddde6, #c8c8d4);
+}
+
+.scratch-leg {
+  bottom: -2px;
+  right: -4px;
+  width: 18px;
+  height: 14px;
+  border-radius: 40%;
+  transform-origin: top center;
+  opacity: 0;
+  background: radial-gradient(ellipse at 50% 60%, #e0e0ea, #c8c8d4);
+}
+
+.paw {
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 8px;
+  height: 5px;
+  background: radial-gradient(ellipse, #d5d5e0, #c0c0ce);
+  border-radius: 50%;
+}
+
+/* ===== Action Label ===== */
+.action-label {
+  position: absolute;
+  bottom: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  color: rgba(180, 212, 255, 0.5);
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+  transition: opacity 0.3s;
+}
+
+/* ===== Zzz ===== */
+.zzz-container {
+  position: absolute;
+  top: -8px;
+  right: -20px;
+}
+.zzz {
+  position: absolute;
+  font-size: 14px;
+  color: rgba(180, 212, 255, 0.5);
+  font-weight: 300;
+  animation: zzzFloat 2.5s ease-out infinite;
+  opacity: 0;
+}
+.z1 { right: 0; top: 0; animation-delay: 0s; }
+.z2 { right: 8px; top: -8px; font-size: 18px; animation-delay: 0.5s; }
+.z3 { right: 18px; top: -16px; font-size: 22px; animation-delay: 1s; }
+
+@keyframes zzzFloat {
+  0% { opacity: 0; transform: translateY(0) scale(0.5); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-30px) translateX(10px) scale(1.5); }
+}
+
+/* ===== Hearts ===== */
+.hearts-container {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.heart {
+  position: absolute;
+  font-size: 12px;
+  color: rgba(255, 120, 150, 0.6);
+  animation: heartFloat 1.5s ease-out infinite;
+  opacity: 0;
+}
+.h1 { left: -10px; animation-delay: 0s; }
+.h2 { left: -2px; animation-delay: 0.3s; font-size: 14px; }
+.h3 { left: 8px; animation-delay: 0.6s; }
+
+@keyframes heartFloat {
+  0% { opacity: 0; transform: translateY(0) scale(0.5); }
+  30% { opacity: 1; transform: translateY(-8px) scale(1.2); }
+  100% { opacity: 0; transform: translateY(-25px) scale(0.8); }
+}
+
+/* ============================================================
+   ACTION ANIMATIONS
+   ============================================================ */
+
+/* --- IDLE: Tail wag + gentle breathing --- */
+.action-idle .dog-tail {
+  animation: tailWag 0.6s ease-in-out infinite alternate;
+}
+.action-idle .dog-torso {
+  animation: breathe 2s ease-in-out infinite;
+}
+.action-idle .blush { opacity: 0.4; }
+.action-idle .tongue { height: 3px; }
+
+@keyframes tailWag {
+  0% { transform: rotate(10deg) scaleX(0.9); }
+  100% { transform: rotate(-15deg) scaleX(1); }
+}
+@keyframes breathe {
+  0%, 100% { transform: translateX(-50%) scaleY(1); }
+  50% { transform: translateX(-50%) scaleY(1.03); }
+}
+
+/* --- LOOK: Head turns side to side --- */
+.action-look .dog-head {
+  animation: headTurn 4s ease-in-out infinite;
+}
+.action-look .ear-left { animation: earFlopL 2s ease-in-out infinite alternate; }
+.action-look .ear-right { animation: earFlopR 2s ease-in-out infinite alternate; }
+.action-look .blush { opacity: 0.5; }
+.action-look .tongue { height: 4px; }
+
+@keyframes headTurn {
+  0% { transform: translateX(-50%) rotate(0deg); }
+  20% { transform: translateX(-50%) rotate(15deg); }
+  50% { transform: translateX(-50%) rotate(-12deg); }
+  75% { transform: translateX(-50%) rotate(8deg); }
+  100% { transform: translateX(-50%) rotate(0deg); }
+}
+@keyframes earFlopL {
+  0% { transform: rotate(-10deg); }
+  100% { transform: rotate(-25deg); }
+}
+@keyframes earFlopR {
+  0% { transform: rotate(10deg); }
+  100% { transform: rotate(25deg); }
+}
+
+/* --- SCRATCH: Hind leg scratches ear --- */
+.action-scratch .dog-head {
+  animation: headTilt 0.8s ease-in-out infinite alternate;
+}
+.action-scratch .scratch-leg {
+  opacity: 1;
+  animation: scratchMove 0.4s ease-in-out infinite alternate;
+}
+.action-scratch .dog-torso {
+  animation: scratchBounce 0.4s ease-in-out infinite alternate;
+}
+.action-scratch .ear-right {
+  animation: none;
+  transform: rotate(40deg);
+}
+.action-scratch .blush { opacity: 0.6; }
+.action-scratch .tongue { height: 5px; }
+
+@keyframes headTilt {
+  0% { transform: translateX(-50%) rotate(0deg); }
+  100% { transform: translateX(-50%) rotate(20deg); }
+}
+@keyframes scratchMove {
+  0% { transform: rotate(0deg) translateY(0); }
+  100% { transform: rotate(-30deg) translateY(-4px); }
+}
+@keyframes scratchBounce {
+  0% { transform: translateX(-50%) translateY(0); }
+  100% { transform: translateX(-50%) translateY(-2px); }
+}
+
+/* --- SLEEP: Eyes close, relax --- */
+.action-sleep .eyelid {
+  height: 100%;
+}
+.action-sleep .dog-tail {
+  animation: none;
+  transform: rotate(0deg) scaleY(0.6);
+}
+.action-sleep .dog-head {
+  animation: sleepBob 4s ease-in-out infinite;
+}
+.action-sleep .dog-torso {
+  animation: sleepBreathe 3s ease-in-out infinite;
+}
+.action-sleep .ear-left {
+  transform: rotate(-20deg);
+  animation: none;
+}
+.action-sleep .ear-right {
+  transform: rotate(20deg);
+  animation: none;
+}
+.action-sleep .blush { opacity: 0; }
+.action-sleep .tongue { height: 2px; }
+.action-sleep .mouth::after {
+  border-bottom-color: rgba(50,40,60,0.12);
+}
+.action-sleep .face {
+  box-shadow:
+    inset -2px -2px 6px rgba(0,0,0,0.03),
+    inset 2px 2px 6px rgba(255,255,255,0.5);
+}
+
+@keyframes sleepBob {
+  0%, 100% { transform: translateX(-50%) translateY(0) rotate(0deg); }
+  25% { transform: translateX(-50%) translateY(2px) rotate(3deg); }
+  75% { transform: translateX(-50%) translateY(1px) rotate(-2deg); }
+}
+@keyframes sleepBreathe {
+  0%, 100% { transform: translateX(-50%) scaleY(1); }
+  50% { transform: translateX(-50%) scaleY(1.02); }
+}
+
+/* --- HAPPY: Bounce + fast tail wag --- */
+.action-happy .dog {
+  animation: happyBounce 0.5s ease-in-out infinite alternate;
+}
+.action-happy .dog-tail {
+  animation: tailWagFast 0.2s ease-in-out infinite alternate;
+}
+.action-happy .dog-torso {
+  animation: breathe 0.8s ease-in-out infinite;
+}
+.action-happy .ear-left { animation: earFlopL 0.5s ease-in-out infinite alternate; }
+.action-happy .ear-right { animation: earFlopR 0.5s ease-in-out infinite alternate; }
+.action-happy .blush { opacity: 0.7; }
+.action-happy .tongue { height: 6px; }
+.action-happy .mouth::after {
+  width: 12px;
+  border-bottom: 2.5px solid rgba(50,40,60,0.3);
+}
+.action-happy .eyeball {
+  animation: happyEyes 0.3s ease-in-out infinite alternate;
+}
+
+@keyframes happyBounce {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-8px); }
+}
+@keyframes tailWagFast {
+  0% { transform: rotate(20deg) scaleX(0.8); }
+  100% { transform: rotate(-25deg) scaleX(1.1); }
+}
+@keyframes happyEyes {
+  0% { transform: scaleY(1); }
+  100% { transform: scaleY(0.6); }
 }
 
 /* ==================== Login Card ==================== */
