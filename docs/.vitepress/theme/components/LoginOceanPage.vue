@@ -3,16 +3,6 @@
     <!-- Canvas for wave rendering -->
     <canvas ref="waveCanvas" class="wave-canvas"></canvas>
 
-    <!-- Sky layers -->
-    <div class="sky-layer"></div>
-
-    <!-- Moon/Sun -->
-    <div class="sun-container" :style="sunParallaxStyle">
-      <div class="sun"></div>
-      <div class="sun-glow"></div>
-      <div class="sun-reflection"></div>
-    </div>
-
     <!-- Cloud layers -->
     <div class="clouds-layer" :style="cloudsParallaxStyle">
       <div class="cloud cloud-1"></div>
@@ -147,9 +137,8 @@ const mouseY = ref(0.5)
 const mouseScreenX = ref(0)
 const mouseScreenY = ref(0)
 
-// ==================== Wave Canvas (向屏幕正前方波动) ====================
+// ==================== Wave Canvas + 日出动画 ====================
 let animationId = 0
-let waveTime = 0
 
 function initCanvas() {
   const canvas = waveCanvas.value
@@ -164,105 +153,181 @@ function initCanvas() {
   resize()
   window.addEventListener('resize', resize)
 
+  // 日出周期参数 (毫秒)
+  const CYCLE_MS = 40000        // 完整日出周期
+  const RISE_START = 0.05       // 太阳起始位置 (地平线下方)
+  const RISE_END = 0.52         // 太阳最终位置 (天空占比)
+
   function drawWaves(t: number) {
     if (!ctx || !canvas) return
     ctx.clearRect(0, 0, canvas.width, canvas.height)
 
     const w = canvas.width
     const h = canvas.height
-    const horizonY = h * 0.52 // 地平线位置
+    const horizonY = h * 0.52
 
-    // ===== 天空渐变 (暗蓝) =====
+    // ===== 日出进度计算 =====
+    // 使用 sin 曲线让日出先快后慢，更自然
+    const rawProgress = (t % CYCLE_MS) / CYCLE_MS
+    // 0→1: 太阳升起 | 1→0: 快速回落（模拟落下）
+    let riseProgress: number
+    let isRising: boolean
+
+    if (rawProgress < 0.75) {
+      // 75% 时间用于日出
+      riseProgress = rawProgress / 0.75
+      isRising = true
+    } else {
+      // 25% 时间快速回落
+      riseProgress = 1 - (rawProgress - 0.75) / 0.25
+      isRising = false
+    }
+
+    // ease-out 曲线：日出先快后慢
+    const eased = 1 - Math.pow(1 - Math.min(riseProgress, 1), 1.8)
+    const sunHeightRatio = RISE_START + eased * (RISE_END - RISE_START)
+
+    // 太阳位置
+    const sunX = w * 0.5 + Math.sin(t * 0.00003) * 40
+    const sunY = horizonY * sunHeightRatio + horizonY * (1 - sunHeightRatio) * 1.15
+    const sunRadius = Math.min(w, h) * 0.045
+
+    // ===== 日出辉光强度 =====
+    // 太阳刚露出地平线时辉光最强
+    const dawnGlow = Math.max(0, Math.sin(eased * Math.PI) * 0.8 + 0.2)
+
+    // ===== 天空渐变 (随日出动态变化) =====
     const skyGrad = ctx.createLinearGradient(0, 0, 0, horizonY)
-    skyGrad.addColorStop(0, '#050714')
-    skyGrad.addColorStop(0.25, '#080d24')
-    skyGrad.addColorStop(0.45, '#0c1a3a')
-    skyGrad.addColorStop(0.6, '#0f2350')
-    skyGrad.addColorStop(0.75, '#132f5e')
-    skyGrad.addColorStop(0.88, '#1a3f72')
-    skyGrad.addColorStop(1, '#1f4d82')
+
+    // 夜空底色 → 逐渐变亮
+    const nightDim = Math.max(0.15, 1 - eased * 1.2)
+    skyGrad.addColorStop(0, `rgba(5, 7, 20, ${0.6 + nightDim * 0.4})`)
+
+    // 中天颜色 (深蓝→蓝紫)
+    const midR = Math.round(8 + 40 * eased)
+    const midG = Math.round(13 + 55 * eased)
+    const midB = Math.round(36 + 90 * eased)
+    skyGrad.addColorStop(0.35, `rgb(${midR}, ${midG}, ${midB})`)
+
+    // 地平线附近 - 日出暖色辉光
+    const hr = Math.round(20 + 120 * dawnGlow * (0.6 + 0.4 * eased))
+    const hg = Math.round(15 + 80 * dawnGlow * eased)
+    const hb = Math.round(50 + 100 * dawnGlow * (0.5 + 0.5 * eased))
+    skyGrad.addColorStop(0.65, `rgb(${Math.min(hr, 180)}, ${Math.min(hg, 120)}, ${Math.min(hb, 180)})`)
+
+    // 地平线边缘 - 金色/橙色辉光
+    const horizonGlow = dawnGlow * (0.8 + 0.2 * eased)
+    skyGrad.addColorStop(0.85, `rgba(180, 120, 60, ${horizonGlow * 0.6})`)
+    skyGrad.addColorStop(0.95, `rgba(200, 150, 80, ${horizonGlow * 0.3})`)
+    skyGrad.addColorStop(1, `rgba(160, 140, 120, ${horizonGlow * 0.15})`)
+
     ctx.fillStyle = skyGrad
     ctx.fillRect(0, 0, w, horizonY)
 
-    // ===== 星星 =====
-    const seed = 54321
-    for (let i = 0; i < 80; i++) {
-      const sx = ((seed * (i + 1) * 13) % w)
-      const sy = ((seed * (i + 1) * 7) % (horizonY * 0.7))
-      const sz = 0.4 + ((seed * (i + 1) * 3) % 3) * 0.4
-      const twinkle = 0.2 + 0.8 * Math.sin(t * 0.0008 + i * 3.7)
-      ctx.globalAlpha = twinkle * 0.7
-      ctx.fillStyle = '#b8d4ff'
-      ctx.beginPath()
-      ctx.arc(sx, sy, sz, 0, Math.PI * 2)
-      ctx.fill()
+    // ===== 星星 (日出过程中逐渐消失) =====
+    const starAlpha = Math.max(0, 0.7 - eased * 1.5)
+    if (starAlpha > 0.01) {
+      const seed = 54321
+      for (let i = 0; i < 80; i++) {
+        const sx = ((seed * (i + 1) * 13) % w)
+        const sy = ((seed * (i + 1) * 7) % (horizonY * 0.7))
+        const sz = 0.4 + ((seed * (i + 1) * 3) % 3) * 0.4
+        const twinkle = 0.2 + 0.8 * Math.sin(t * 0.0008 + i * 3.7)
+        ctx.globalAlpha = twinkle * starAlpha
+        ctx.fillStyle = '#b8d4ff'
+        ctx.beginPath()
+        ctx.arc(sx, sy, sz, 0, Math.PI * 2)
+        ctx.fill()
+      }
+      ctx.globalAlpha = 1
     }
-    ctx.globalAlpha = 1
 
-    // ===== 太阳 (冷色调发光) =====
-    const sunX = w * 0.5 + Math.sin(t * 0.00008) * 60
-    const sunY = horizonY * 0.88
-    const sunRadius = Math.min(w, h) * 0.055
+    // ===== 地平线辉光带 =====
+    if (dawnGlow > 0.05) {
+      const glowGrad = ctx.createLinearGradient(0, horizonY - 60, 0, horizonY + 20)
+      glowGrad.addColorStop(0, 'transparent')
+      glowGrad.addColorStop(0.5, `rgba(200, 150, 80, ${dawnGlow * 0.15})`)
+      glowGrad.addColorStop(0.8, `rgba(180, 120, 60, ${dawnGlow * 0.1})`)
+      glowGrad.addColorStop(1, 'transparent')
+      ctx.fillStyle = glowGrad
+      ctx.fillRect(0, horizonY - 60, w, 80)
+    }
 
-    // 太阳光晕
-    const sunGlow = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, sunRadius * 3.5)
-    sunGlow.addColorStop(0, 'rgba(180, 212, 255, 0.25)')
-    sunGlow.addColorStop(0.3, 'rgba(120, 180, 255, 0.1)')
-    sunGlow.addColorStop(0.6, 'rgba(80, 140, 255, 0.04)')
-    sunGlow.addColorStop(1, 'rgba(80, 140, 255, 0)')
+    // ===== 太阳 (从海平面升起) =====
+    // 太阳光晕 - 日出时最大
+    const glowRadius = sunRadius * (3 + dawnGlow * 2)
+    const sunGlow = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, glowRadius)
+    // 光晕颜色随日出变化
+    const gR = Math.round(180 + 75 * dawnGlow)
+    const gG = Math.round(200 + 55 * dawnGlow)
+    const gB = Math.round(255)
+    const glowAlpha1 = 0.15 + dawnGlow * 0.35
+    const glowAlpha2 = 0.06 + dawnGlow * 0.1
+    sunGlow.addColorStop(0, `rgba(${gR}, ${gG}, ${gB}, ${glowAlpha1})`)
+    sunGlow.addColorStop(0.4, `rgba(${gR - 40}, ${gG - 40}, ${gB}, ${glowAlpha2})`)
+    sunGlow.addColorStop(1, `rgba(${gR - 80}, ${gG - 80}, ${gB - 40}, 0)`)
     ctx.fillStyle = sunGlow
     ctx.beginPath()
-    ctx.arc(sunX, sunY, sunRadius * 3.5, 0, Math.PI * 2)
+    ctx.arc(sunX, sunY, glowRadius, 0, Math.PI * 2)
     ctx.fill()
 
-    // 太阳本体
-    const sunGrad = ctx.createRadialGradient(sunX - sunRadius * 0.25, sunY - sunRadius * 0.25, 0, sunX, sunY, sunRadius)
-    sunGrad.addColorStop(0, '#e8f0ff')
-    sunGrad.addColorStop(0.2, '#c4d8ff')
-    sunGrad.addColorStop(0.5, '#8ab4ff')
-    sunGrad.addColorStop(0.8, '#5a90e0')
-    sunGrad.addColorStop(1, '#3a6fc4')
-    ctx.fillStyle = sunGrad
+    // 太阳本体 - 颜色随高度变化 (低时暖色, 高时冷白)
+    const warmShift = Math.max(0, 1 - eased * 2)  // 日出时带暖色
+    const bodyGrad = ctx.createRadialGradient(
+      sunX - sunRadius * 0.25, sunY - sunRadius * 0.25, 0,
+      sunX, sunY, sunRadius
+    )
+    const bR = Math.round(232 + 23 * (1 - warmShift))
+    const bG = Math.round(240 + 15 * (1 - warmShift))
+    const bB = Math.round(255)
+    bodyGrad.addColorStop(0, `rgb(${Math.min(bR + 20, 255)}, ${Math.min(bG + 15, 255)}, ${bB})`)
+    bodyGrad.addColorStop(0.3, `rgb(${bR}, ${bG}, ${bB})`)
+    bodyGrad.addColorStop(0.6, `rgb(${bR - 20 * warmShift}, ${bG - 30 * warmShift}, ${bB - 20})`)
+    bodyGrad.addColorStop(0.85, `rgb(${bR - 50 * warmShift}, ${bG - 60 * warmShift}, ${bB - 50})`)
+    bodyGrad.addColorStop(1, `rgb(${bR - 70 * warmShift}, ${bG - 80 * warmShift}, ${bB - 70})`)
+    ctx.fillStyle = bodyGrad
     ctx.beginPath()
     ctx.arc(sunX, sunY, sunRadius, 0, Math.PI * 2)
     ctx.fill()
 
-    // 太阳在水面的冷色倒影
-    ctx.save()
-    ctx.globalAlpha = 0.2
-    for (let i = 0; i < 6; i++) {
-      const ry = horizonY + 4 + i * 10 + Math.sin(t * 0.002 + i * 1.2) * 2
-      const rw = (25 - i * 3) * (0.5 + 0.5 * Math.sin(t * 0.004 + i * 0.8))
-      const rx = sunX - rw / 2
-      ctx.fillStyle = `rgba(120, 180, 255, ${0.12 - i * 0.015})`
-      ctx.beginPath()
-      ctx.ellipse(rx + rw / 2, ry, rw / 2, 1.5, 0, 0, Math.PI * 2)
-      ctx.fill()
+    // ===== 太阳倒影 (水面) =====
+    if (sunY < horizonY + 40) {
+      ctx.save()
+      const refAlpha = Math.max(0, 0.25 - eased * 0.15) * (1 - Math.abs(sunY - horizonY) / (horizonY * 0.5))
+      ctx.globalAlpha = refAlpha
+      for (let i = 0; i < 8; i++) {
+        const ry = horizonY + 3 + i * 9 + Math.sin(t * 0.002 + i * 1.2) * 2
+        const rw = (28 - i * 3) * (0.6 + 0.4 * Math.sin(t * 0.003 + i * 0.7))
+        const rx = sunX - rw / 2
+        const colR = Math.round(180 + 75 * dawnGlow * (1 - i * 0.08))
+        const colG = Math.round(200 + 55 * dawnGlow * (1 - i * 0.1))
+        ctx.fillStyle = `rgba(${colR}, ${colG}, 255, ${0.12 - i * 0.012})`
+        ctx.beginPath()
+        ctx.ellipse(rx + rw / 2, ry, rw / 2, 1.5, 0, 0, Math.PI * 2)
+        ctx.fill()
+      }
+      ctx.restore()
     }
-    ctx.restore()
 
-    // ===== 海洋底色 (暗蓝) =====
+    // ===== 海洋底色 =====
     const oceanGrad = ctx.createLinearGradient(0, horizonY, 0, h)
-    oceanGrad.addColorStop(0, '#0a1628')
-    oceanGrad.addColorStop(0.1, '#0c1d36')
-    oceanGrad.addColorStop(0.3, '#0a1a30')
-    oceanGrad.addColorStop(0.6, '#071226')
+    // 海面也受日出影响 - 靠近地平线略带暖色
+    oceanGrad.addColorStop(0, `rgba(${10 + 30 * dawnGlow}, ${22 + 20 * dawnGlow}, ${40 + 30 * dawnGlow}, 1)`)
+    oceanGrad.addColorStop(0.15, `rgba(10, 25, 48, 1)`)
+    oceanGrad.addColorStop(0.4, `rgba(8, 18, 38, 1)`)
+    oceanGrad.addColorStop(0.7, `rgba(6, 12, 26, 1)`)
     oceanGrad.addColorStop(1, '#030a14')
     ctx.fillStyle = oceanGrad
     ctx.fillRect(0, horizonY, w, h - horizonY)
 
     // ===== 向屏幕正前方波动 =====
-    // 使用透视效果：近处(底部)振幅大、远处(地平线)振幅小
-    // 波峰随时间向前推进
-
-    // 鼠标交互影响
     const mouseInfluenceX = (mouseX.value - 0.5) * 30
     const mouseInfluenceY = (1 - mouseY.value) * 1.5 + 0.5
 
     for (let layer = 0; layer < 6; layer++) {
       const layerSpeed = 0.0004 + layer * 0.00035
       const baseAmp = 6 + layer * 4
-      const perspectiveScale = 0.3 + layer * 0.12 // 从远到近的缩放
+      const perspectiveScale = 0.3 + layer * 0.12
       const freqMultiplier = 0.012 - layer * 0.0008
       const alpha = 0.06 + layer * 0.035
 
@@ -270,21 +335,12 @@ function initCanvas() {
       ctx.moveTo(0, h)
 
       for (let x = 0; x <= w; x += 3) {
-        // 透视衰减：越靠近底部(近处)波动越大
-        const depthFactor = 1 - (x / w - 0.5) * (x / w - 0.5) * 0.6 // 中间略微突出
-
-        // 复合波浪函数 - 向前推进效果
+        const depthFactor = 1 - (x / w - 0.5) * (x / w - 0.5) * 0.6
         const wave1 = Math.sin(x * freqMultiplier + t * layerSpeed) * baseAmp * perspectiveScale * 1.2
         const wave2 = Math.sin(x * 0.006 + t * 0.0008 + layer * 1.3) * baseAmp * perspectiveScale * 0.6
         const wave3 = Math.sin(x * 0.0025 + t * 0.0015 + layer * 2.1) * baseAmp * perspectiveScale * 0.3
-
-        // 鼠标影响 - 产生水流扰动
         const mouseWave = mouseInfluenceX * Math.sin(x * 0.003 + t * 0.0004 + layer) * 0.3
-
-        // 每一层的基线偏移 (从地平线逐渐下降)
         const yBase = horizonY + 8 + layer * 14 + layer * layer * 2.5
-
-        // 透视：底部的层偏移更大
         const y = yBase + (wave1 + wave2 + wave3 + mouseWave) * mouseInfluenceY * depthFactor
         ctx.lineTo(x, y)
       }
@@ -292,9 +348,10 @@ function initCanvas() {
       ctx.lineTo(w, h)
       ctx.closePath()
 
-      // 暗蓝波浪色
+      // 波浪颜色 - 最上层略受日出影响
+      const dawnTint = layer === 0 ? Math.round(15 * dawnGlow) : 0
       const waveColors = [
-        'rgba(15, 40, 80, ALPHA)',
+        `rgba(${15 + dawnTint}, ${40 + dawnTint}, ${80 + dawnTint}, ALPHA)`,
         'rgba(18, 50, 90, ALPHA)',
         'rgba(22, 58, 105, ALPHA)',
         'rgba(28, 68, 120, ALPHA)',
@@ -352,12 +409,6 @@ const cardParallaxStyle = computed(() => {
   return {
     transform: `translate(${dx}px, ${dy}px) perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`,
   }
-})
-
-const sunParallaxStyle = computed(() => {
-  const dx = (mouseX.value - 0.5) * 8
-  const dy = (mouseY.value - 0.5) * 4
-  return { transform: `translate(${dx}px, ${dy}px)` }
 })
 
 const cloudsParallaxStyle = computed(() => {
@@ -445,82 +496,6 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
   z-index: 1;
-}
-
-/* ==================== Sky ==================== */
-.sky-layer {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 52%;
-  background: linear-gradient(180deg,
-    #050714 0%,
-    #080d24 20%,
-    #0c1a3a 35%,
-    #0f2350 50%,
-    #132f5e 65%,
-    #1a3f72 80%,
-    #1f4d82 100%
-  );
-  z-index: 0;
-}
-
-/* ==================== Sun / Moon ==================== */
-.sun-container {
-  position: absolute;
-  left: 50%;
-  top: 44%;
-  transform: translate(-50%, -50%);
-  z-index: 2;
-  pointer-events: none;
-  transition: transform 0.1s ease-out;
-}
-
-.sun {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #e8f0ff, #c4d8ff 25%, #8ab4ff 50%, #5a90e0 75%, #3a6fc4 100%);
-  box-shadow:
-    0 0 60px rgba(138, 180, 255, 0.3),
-    0 0 120px rgba(90, 144, 224, 0.15),
-    0 0 180px rgba(58, 111, 196, 0.08);
-}
-
-.sun-glow {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 260px;
-  height: 260px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(138, 180, 255, 0.08) 0%, transparent 70%);
-  animation: sunPulse 5s ease-in-out infinite;
-}
-
-.sun-reflection {
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 160px;
-  height: 50px;
-  background: linear-gradient(180deg, rgba(138, 180, 255, 0.1) 0%, transparent 100%);
-  border-radius: 50%;
-  filter: blur(6px);
-  animation: reflectPulse 4s ease-in-out infinite;
-}
-
-@keyframes sunPulse {
-  0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
-  50% { opacity: 0.9; transform: translate(-50%, -50%) scale(1.08); }
-}
-
-@keyframes reflectPulse {
-  0%, 100% { opacity: 0.2; }
-  50% { opacity: 0.5; }
 }
 
 /* ==================== Clouds ==================== */
@@ -972,16 +947,6 @@ onUnmounted(() => {
   .login-card {
     width: calc(100vw - 40px);
     padding: 28px 24px;
-  }
-
-  .sun {
-    width: 70px;
-    height: 70px;
-  }
-
-  .sun-glow {
-    width: 180px;
-    height: 180px;
   }
 }
 
