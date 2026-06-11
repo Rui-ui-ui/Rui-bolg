@@ -3,26 +3,21 @@
     <!-- Canvas for wave rendering -->
     <canvas ref="waveCanvas" class="wave-canvas"></canvas>
 
-    <!-- Sunset sky layers -->
+    <!-- Sky layers -->
     <div class="sky-layer"></div>
+
+    <!-- Moon/Sun -->
     <div class="sun-container" :style="sunParallaxStyle">
       <div class="sun"></div>
       <div class="sun-glow"></div>
       <div class="sun-reflection"></div>
     </div>
 
-    <!-- Cloud layers with parallax -->
+    <!-- Cloud layers -->
     <div class="clouds-layer" :style="cloudsParallaxStyle">
       <div class="cloud cloud-1"></div>
       <div class="cloud cloud-2"></div>
       <div class="cloud cloud-3"></div>
-    </div>
-
-    <!-- Birds -->
-    <div class="birds">
-      <div class="bird b1">V</div>
-      <div class="bird b2">V</div>
-      <div class="bird b3">V</div>
     </div>
 
     <!-- Ocean surface sparkle -->
@@ -30,14 +25,13 @@
       <div v-for="n in 20" :key="'s'+n" class="sparkle" :style="sparkleStyle(n)"></div>
     </div>
 
-    <!-- Floating bubbles / particles -->
+    <!-- Floating bubbles -->
     <div class="bubbles">
       <div
-        v-for="n in 12"
+        v-for="n in 10"
         :key="n"
         class="bubble"
         :style="bubbleStyle(n)"
-        :ref="el => { if (el) bubbleRefs[n-1] = el as HTMLElement }"
       ></div>
     </div>
 
@@ -46,7 +40,7 @@
       <div class="login-card" ref="loginCardRef">
         <div class="card-header">
           <div class="avatar">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
               <circle cx="12" cy="7" r="4"/>
             </svg>
@@ -56,7 +50,7 @@
         </div>
         <form class="login-form" @submit.prevent="handleLogin">
           <div class="form-group" :class="{ 'focused': focusedField === 'email' }">
-            <label for="email">
+            <label for="email-ocean">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                 <polyline points="22,6 12,13 2,6"/>
@@ -65,7 +59,7 @@
             </label>
             <div class="input-wrapper">
               <input
-                id="email"
+                id="email-ocean"
                 v-model="email"
                 type="email"
                 placeholder="your@email.com"
@@ -76,7 +70,7 @@
             </div>
           </div>
           <div class="form-group" :class="{ 'focused': focusedField === 'password' }">
-            <label for="password">
+            <label for="password-ocean">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                 <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
@@ -85,7 +79,7 @@
             </label>
             <div class="input-wrapper">
               <input
-                id="password"
+                id="password-ocean"
                 v-model="password"
                 :type="showPassword ? 'text' : 'password'"
                 placeholder="••••••••"
@@ -138,7 +132,6 @@ import { ref, onMounted, onUnmounted, computed } from 'vue'
 const containerRef = ref<HTMLElement | null>(null)
 const waveCanvas = ref<HTMLCanvasElement | null>(null)
 const loginCardRef = ref<HTMLElement | null>(null)
-const bubbleRefs = ref<HTMLElement[]>([])
 
 const email = ref('')
 const password = ref('')
@@ -154,7 +147,7 @@ const mouseY = ref(0.5)
 const mouseScreenX = ref(0)
 const mouseScreenY = ref(0)
 
-// ==================== Wave Canvas Animation ====================
+// ==================== Wave Canvas (向屏幕正前方波动) ====================
 let animationId = 0
 let waveTime = 0
 
@@ -171,147 +164,161 @@ function initCanvas() {
   resize()
   window.addEventListener('resize', resize)
 
-  const gradientCache: { [key: string]: CanvasGradient } = {}
-
   function drawWaves(t: number) {
     if (!ctx || !canvas) return
     ctx.clearRect(0, 0, canvas.width, canvas.height)
 
     const w = canvas.width
     const h = canvas.height
-    // Ocean starts at 55% from top
-    const oceanTop = h * 0.55
+    const horizonY = h * 0.52 // 地平线位置
 
-    // --- Sky gradient (sunset) ---
-    const skyGrad = ctx.createLinearGradient(0, 0, 0, oceanTop)
-    skyGrad.addColorStop(0, '#0b0b2b')
-    skyGrad.addColorStop(0.2, '#1a1a4e')
-    skyGrad.addColorStop(0.4, '#4a2066')
-    skyGrad.addColorStop(0.55, '#c44e2b')
-    skyGrad.addColorStop(0.7, '#e8853d')
-    skyGrad.addColorStop(0.85, '#f5b85a')
-    skyGrad.addColorStop(1, '#fce38a')
+    // ===== 天空渐变 (暗蓝) =====
+    const skyGrad = ctx.createLinearGradient(0, 0, 0, horizonY)
+    skyGrad.addColorStop(0, '#050714')
+    skyGrad.addColorStop(0.25, '#080d24')
+    skyGrad.addColorStop(0.45, '#0c1a3a')
+    skyGrad.addColorStop(0.6, '#0f2350')
+    skyGrad.addColorStop(0.75, '#132f5e')
+    skyGrad.addColorStop(0.88, '#1a3f72')
+    skyGrad.addColorStop(1, '#1f4d82')
     ctx.fillStyle = skyGrad
-    ctx.fillRect(0, 0, w, oceanTop)
+    ctx.fillRect(0, 0, w, horizonY)
 
-    // --- Stars ---
-    ctx.fillStyle = 'rgba(255,255,255,0.6)'
-    const seed = 12345
-    for (let i = 0; i < 60; i++) {
+    // ===== 星星 =====
+    const seed = 54321
+    for (let i = 0; i < 80; i++) {
       const sx = ((seed * (i + 1) * 13) % w)
-      const sy = ((seed * (i + 1) * 7) % (oceanTop * 0.6))
-      const sz = 0.5 + ((seed * (i + 1) * 3) % 3) * 0.5
-      const twinkle = 0.3 + 0.7 * Math.sin(t * 0.001 + i * 2.3)
-      ctx.globalAlpha = twinkle * 0.8
+      const sy = ((seed * (i + 1) * 7) % (horizonY * 0.7))
+      const sz = 0.4 + ((seed * (i + 1) * 3) % 3) * 0.4
+      const twinkle = 0.2 + 0.8 * Math.sin(t * 0.0008 + i * 3.7)
+      ctx.globalAlpha = twinkle * 0.7
+      ctx.fillStyle = '#b8d4ff'
       ctx.beginPath()
       ctx.arc(sx, sy, sz, 0, Math.PI * 2)
       ctx.fill()
     }
     ctx.globalAlpha = 1
 
-    // --- Sun ---
-    const sunX = w * 0.5 + Math.sin(t * 0.0001) * 50
-    const sunY = oceanTop * 0.92
-    const sunRadius = Math.min(w, h) * 0.06
+    // ===== 太阳 (冷色调发光) =====
+    const sunX = w * 0.5 + Math.sin(t * 0.00008) * 60
+    const sunY = horizonY * 0.88
+    const sunRadius = Math.min(w, h) * 0.055
 
-    // Sun glow
-    const sunGlow = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, sunRadius * 3)
-    sunGlow.addColorStop(0, 'rgba(252, 227, 138, 0.3)')
-    sunGlow.addColorStop(0.3, 'rgba(232, 133, 61, 0.15)')
-    sunGlow.addColorStop(1, 'rgba(232, 133, 61, 0)')
+    // 太阳光晕
+    const sunGlow = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, sunRadius * 3.5)
+    sunGlow.addColorStop(0, 'rgba(180, 212, 255, 0.25)')
+    sunGlow.addColorStop(0.3, 'rgba(120, 180, 255, 0.1)')
+    sunGlow.addColorStop(0.6, 'rgba(80, 140, 255, 0.04)')
+    sunGlow.addColorStop(1, 'rgba(80, 140, 255, 0)')
     ctx.fillStyle = sunGlow
     ctx.beginPath()
-    ctx.arc(sunX, sunY, sunRadius * 3, 0, Math.PI * 2)
+    ctx.arc(sunX, sunY, sunRadius * 3.5, 0, Math.PI * 2)
     ctx.fill()
 
-    // Sun body
-    const sunGrad = ctx.createRadialGradient(sunX - sunRadius * 0.2, sunY - sunRadius * 0.2, 0, sunX, sunY, sunRadius)
-    sunGrad.addColorStop(0, '#fff5d6')
-    sunGrad.addColorStop(0.3, '#fce38a')
-    sunGrad.addColorStop(0.7, '#f5b85a')
-    sunGrad.addColorStop(1, '#e8853d')
+    // 太阳本体
+    const sunGrad = ctx.createRadialGradient(sunX - sunRadius * 0.25, sunY - sunRadius * 0.25, 0, sunX, sunY, sunRadius)
+    sunGrad.addColorStop(0, '#e8f0ff')
+    sunGrad.addColorStop(0.2, '#c4d8ff')
+    sunGrad.addColorStop(0.5, '#8ab4ff')
+    sunGrad.addColorStop(0.8, '#5a90e0')
+    sunGrad.addColorStop(1, '#3a6fc4')
     ctx.fillStyle = sunGrad
     ctx.beginPath()
     ctx.arc(sunX, sunY, sunRadius, 0, Math.PI * 2)
     ctx.fill()
 
-    // Sun reflection on water
+    // 太阳在水面的冷色倒影
     ctx.save()
-    ctx.globalAlpha = 0.3
-    for (let i = 0; i < 8; i++) {
-      const ry = oceanTop + 5 + i * 8 + Math.sin(t * 0.003 + i) * 3
-      const rw = (30 - i * 3) * (0.5 + 0.5 * Math.sin(t * 0.005 + i * 0.7))
+    ctx.globalAlpha = 0.2
+    for (let i = 0; i < 6; i++) {
+      const ry = horizonY + 4 + i * 10 + Math.sin(t * 0.002 + i * 1.2) * 2
+      const rw = (25 - i * 3) * (0.5 + 0.5 * Math.sin(t * 0.004 + i * 0.8))
       const rx = sunX - rw / 2
-      ctx.fillStyle = `rgba(252, 227, 138, ${0.15 - i * 0.015})`
+      ctx.fillStyle = `rgba(120, 180, 255, ${0.12 - i * 0.015})`
       ctx.beginPath()
-      ctx.ellipse(rx + rw / 2, ry, rw / 2, 2, 0, 0, Math.PI * 2)
+      ctx.ellipse(rx + rw / 2, ry, rw / 2, 1.5, 0, 0, Math.PI * 2)
       ctx.fill()
     }
     ctx.restore()
 
-    // --- Ocean base ---
-    const oceanGrad = ctx.createLinearGradient(0, oceanTop, 0, h)
+    // ===== 海洋底色 (暗蓝) =====
+    const oceanGrad = ctx.createLinearGradient(0, horizonY, 0, h)
     oceanGrad.addColorStop(0, '#0a1628')
-    oceanGrad.addColorStop(0.15, '#0d1f3c')
-    oceanGrad.addColorStop(0.4, '#0c2340')
-    oceanGrad.addColorStop(0.7, '#071526')
+    oceanGrad.addColorStop(0.1, '#0c1d36')
+    oceanGrad.addColorStop(0.3, '#0a1a30')
+    oceanGrad.addColorStop(0.6, '#071226')
     oceanGrad.addColorStop(1, '#030a14')
     ctx.fillStyle = oceanGrad
-    ctx.fillRect(0, oceanTop, w, h - oceanTop)
+    ctx.fillRect(0, horizonY, w, h - horizonY)
 
-    // --- Waves ---
-    // Mouse interaction: wave amplitude
-    const mouseInfluence = 1 + (1 - mouseY.value) * 0.8
+    // ===== 向屏幕正前方波动 =====
+    // 使用透视效果：近处(底部)振幅大、远处(地平线)振幅小
+    // 波峰随时间向前推进
 
-    for (let layer = 0; layer < 5; layer++) {
-      const layerSpeed = 0.0008 + layer * 0.0003
-      const layerAmp = (8 + layer * 5) * mouseInfluence
-      const layerFreq = 0.008 - layer * 0.001
-      const layerOffset = layer * 1.5
-      const alpha = 0.08 + layer * 0.04
-      const yBase = oceanTop + layer * 12
+    // 鼠标交互影响
+    const mouseInfluenceX = (mouseX.value - 0.5) * 30
+    const mouseInfluenceY = (1 - mouseY.value) * 1.5 + 0.5
+
+    for (let layer = 0; layer < 6; layer++) {
+      const layerSpeed = 0.0004 + layer * 0.00035
+      const baseAmp = 6 + layer * 4
+      const perspectiveScale = 0.3 + layer * 0.12 // 从远到近的缩放
+      const freqMultiplier = 0.012 - layer * 0.0008
+      const alpha = 0.06 + layer * 0.035
 
       ctx.beginPath()
       ctx.moveTo(0, h)
 
-      for (let x = 0; x <= w; x += 4) {
-        const y =
-          yBase +
-          Math.sin(x * layerFreq + t * layerSpeed) * layerAmp +
-          Math.sin(x * 0.015 + t * 0.001 + layer) * (layerAmp * 0.5) +
-          Math.sin(x * 0.003 + t * 0.002 + layer * 2) * (layerAmp * 0.3) +
-          (mouseX.value - 0.5) * 20 * Math.sin(x * 0.005 + t * 0.0005) * 0.5
+      for (let x = 0; x <= w; x += 3) {
+        // 透视衰减：越靠近底部(近处)波动越大
+        const depthFactor = 1 - (x / w - 0.5) * (x / w - 0.5) * 0.6 // 中间略微突出
+
+        // 复合波浪函数 - 向前推进效果
+        const wave1 = Math.sin(x * freqMultiplier + t * layerSpeed) * baseAmp * perspectiveScale * 1.2
+        const wave2 = Math.sin(x * 0.006 + t * 0.0008 + layer * 1.3) * baseAmp * perspectiveScale * 0.6
+        const wave3 = Math.sin(x * 0.0025 + t * 0.0015 + layer * 2.1) * baseAmp * perspectiveScale * 0.3
+
+        // 鼠标影响 - 产生水流扰动
+        const mouseWave = mouseInfluenceX * Math.sin(x * 0.003 + t * 0.0004 + layer) * 0.3
+
+        // 每一层的基线偏移 (从地平线逐渐下降)
+        const yBase = horizonY + 8 + layer * 14 + layer * layer * 2.5
+
+        // 透视：底部的层偏移更大
+        const y = yBase + (wave1 + wave2 + wave3 + mouseWave) * mouseInfluenceY * depthFactor
         ctx.lineTo(x, y)
       }
 
       ctx.lineTo(w, h)
       ctx.closePath()
 
+      // 暗蓝波浪色
       const waveColors = [
-        'rgba(20, 60, 120, ALPHA)',
-        'rgba(15, 50, 100, ALPHA)',
-        'rgba(25, 70, 130, ALPHA)',
-        'rgba(10, 40, 90, ALPHA)',
-        'rgba(30, 80, 150, ALPHA)',
+        'rgba(15, 40, 80, ALPHA)',
+        'rgba(18, 50, 90, ALPHA)',
+        'rgba(22, 58, 105, ALPHA)',
+        'rgba(28, 68, 120, ALPHA)',
+        'rgba(35, 78, 135, ALPHA)',
+        'rgba(42, 88, 145, ALPHA)',
       ]
 
-      const color = waveColors[layer].replace('ALPHA', String(alpha + 0.05))
-      ctx.fillStyle = color
+      ctx.fillStyle = waveColors[layer].replace('ALPHA', String(Math.min(alpha + 0.03, 0.3)))
       ctx.fill()
 
-      // Wave highlight
+      // 波浪高光线
       ctx.beginPath()
-      for (let x = 0; x <= w; x += 4) {
-        const y =
-          yBase +
-          Math.sin(x * layerFreq + t * layerSpeed) * layerAmp +
-          Math.sin(x * 0.015 + t * 0.001 + layer) * (layerAmp * 0.5) +
-          Math.sin(x * 0.003 + t * 0.002 + layer * 2) * (layerAmp * 0.3) +
-          (mouseX.value - 0.5) * 20 * Math.sin(x * 0.005 + t * 0.0005) * 0.5
+      for (let x = 0; x <= w; x += 3) {
+        const depthFactor = 1 - (x / w - 0.5) * (x / w - 0.5) * 0.6
+        const wave1 = Math.sin(x * freqMultiplier + t * layerSpeed) * baseAmp * perspectiveScale * 1.2
+        const wave2 = Math.sin(x * 0.006 + t * 0.0008 + layer * 1.3) * baseAmp * perspectiveScale * 0.6
+        const wave3 = Math.sin(x * 0.0025 + t * 0.0015 + layer * 2.1) * baseAmp * perspectiveScale * 0.3
+        const mouseWave = mouseInfluenceX * Math.sin(x * 0.003 + t * 0.0004 + layer) * 0.3
+        const yBase = horizonY + 8 + layer * 14 + layer * layer * 2.5
+        const y = yBase + (wave1 + wave2 + wave3 + mouseWave) * mouseInfluenceY * depthFactor
         ctx.lineTo(x, y)
       }
-      ctx.strokeStyle = `rgba(100, 180, 255, ${0.02 + layer * 0.008})`
-      ctx.lineWidth = 1.5
+      ctx.strokeStyle = `rgba(100, 180, 255, ${0.015 + layer * 0.006})`
+      ctx.lineWidth = 1.2
       ctx.stroke()
     }
 
@@ -338,24 +345,24 @@ function handleMouseLeave() {
 
 // ==================== Computed Styles ====================
 const cardParallaxStyle = computed(() => {
-  const dx = (mouseX.value - 0.5) * 20
-  const dy = (mouseY.value - 0.5) * 15
-  const rotateX = (mouseY.value - 0.5) * -6
-  const rotateY = (mouseX.value - 0.5) * 6
+  const dx = (mouseX.value - 0.5) * 16
+  const dy = (mouseY.value - 0.5) * 12
+  const rotateX = (mouseY.value - 0.5) * -4
+  const rotateY = (mouseX.value - 0.5) * 4
   return {
     transform: `translate(${dx}px, ${dy}px) perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`,
   }
 })
 
 const sunParallaxStyle = computed(() => {
-  const dx = (mouseX.value - 0.5) * 10
-  const dy = (mouseY.value - 0.5) * 5
+  const dx = (mouseX.value - 0.5) * 8
+  const dy = (mouseY.value - 0.5) * 4
   return { transform: `translate(${dx}px, ${dy}px)` }
 })
 
 const cloudsParallaxStyle = computed(() => {
-  const dx = (mouseX.value - 0.5) * -30
-  const dy = (mouseY.value - 0.5) * -8
+  const dx = (mouseX.value - 0.5) * -25
+  const dy = (mouseY.value - 0.5) * -6
   return { transform: `translate(${dx}px, ${dy}px)` }
 })
 
@@ -364,13 +371,12 @@ const mouseGlowStyle = computed(() => ({
   top: `${mouseScreenY.value}px`,
 }))
 
-// Bubble styles
 function bubbleStyle(n: number) {
-  const size = 3 + (n % 5) * 2
-  const left = ((n * 37 + 13) % 100)
-  const delay = n * 0.7
-  const duration = 6 + (n % 4) * 3
-  const drift = ((n * 23) % 40) - 20
+  const size = 2 + (n % 4) * 2
+  const left = ((n * 31 + 17) % 100)
+  const delay = n * 0.9
+  const duration = 7 + (n % 5) * 3
+  const drift = ((n * 19) % 30) - 15
   return {
     width: `${size}px`,
     height: `${size}px`,
@@ -381,11 +387,10 @@ function bubbleStyle(n: number) {
   }
 }
 
-// Sparkle styles
 function sparkleStyle(n: number) {
   const left = ((n * 53 + 7) % 100)
-  const delay = n * 0.4
-  const duration = 2 + (n % 3) * 1.5
+  const delay = n * 0.5
+  const duration = 2.5 + (n % 3) * 1.5
   return {
     left: `${left}%`,
     animationDelay: `${delay}s`,
@@ -442,22 +447,30 @@ onUnmounted(() => {
   z-index: 1;
 }
 
-/* ==================== Sky Layer ==================== */
+/* ==================== Sky ==================== */
 .sky-layer {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
-  height: 55%;
-  background: linear-gradient(180deg, #0b0b2b 0%, #1a1a4e 20%, #4a2066 35%, #c44e2b 50%, #e8853d 65%, #f5b85a 80%, #fce38a 100%);
+  height: 52%;
+  background: linear-gradient(180deg,
+    #050714 0%,
+    #080d24 20%,
+    #0c1a3a 35%,
+    #0f2350 50%,
+    #132f5e 65%,
+    #1a3f72 80%,
+    #1f4d82 100%
+  );
   z-index: 0;
 }
 
-/* ==================== Sun ==================== */
+/* ==================== Sun / Moon ==================== */
 .sun-container {
   position: absolute;
   left: 50%;
-  top: 48%;
+  top: 44%;
   transform: translate(-50%, -50%);
   z-index: 2;
   pointer-events: none;
@@ -465,14 +478,14 @@ onUnmounted(() => {
 }
 
 .sun {
-  width: 120px;
-  height: 120px;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #fff5d6, #fce38a 30%, #f5b85a 60%, #e8853d 100%);
+  background: radial-gradient(circle at 35% 35%, #e8f0ff, #c4d8ff 25%, #8ab4ff 50%, #5a90e0 75%, #3a6fc4 100%);
   box-shadow:
-    0 0 80px rgba(252, 227, 138, 0.4),
-    0 0 160px rgba(232, 133, 61, 0.2),
-    0 0 240px rgba(232, 133, 61, 0.1);
+    0 0 60px rgba(138, 180, 255, 0.3),
+    0 0 120px rgba(90, 144, 224, 0.15),
+    0 0 180px rgba(58, 111, 196, 0.08);
 }
 
 .sun-glow {
@@ -480,11 +493,11 @@ onUnmounted(() => {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 300px;
-  height: 300px;
+  width: 260px;
+  height: 260px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(252, 227, 138, 0.12) 0%, transparent 70%);
-  animation: sunPulse 4s ease-in-out infinite;
+  background: radial-gradient(circle, rgba(138, 180, 255, 0.08) 0%, transparent 70%);
+  animation: sunPulse 5s ease-in-out infinite;
 }
 
 .sun-reflection {
@@ -492,22 +505,22 @@ onUnmounted(() => {
   top: 100%;
   left: 50%;
   transform: translateX(-50%);
-  width: 200px;
-  height: 60px;
-  background: linear-gradient(180deg, rgba(252, 227, 138, 0.15) 0%, transparent 100%);
+  width: 160px;
+  height: 50px;
+  background: linear-gradient(180deg, rgba(138, 180, 255, 0.1) 0%, transparent 100%);
   border-radius: 50%;
-  filter: blur(8px);
-  animation: reflectPulse 3s ease-in-out infinite;
+  filter: blur(6px);
+  animation: reflectPulse 4s ease-in-out infinite;
 }
 
 @keyframes sunPulse {
-  0%, 100% { opacity: 0.6; transform: translate(-50%, -50%) scale(1); }
-  50% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+  0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+  50% { opacity: 0.9; transform: translate(-50%, -50%) scale(1.08); }
 }
 
 @keyframes reflectPulse {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 0.6; }
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 0.5; }
 }
 
 /* ==================== Clouds ==================== */
@@ -516,7 +529,7 @@ onUnmounted(() => {
   top: 0;
   left: 0;
   width: 100%;
-  height: 40%;
+  height: 35%;
   z-index: 2;
   pointer-events: none;
   transition: transform 0.15s ease-out;
@@ -524,71 +537,39 @@ onUnmounted(() => {
 
 .cloud {
   position: absolute;
-  background: radial-gradient(ellipse at center, rgba(255,255,255,0.15) 0%, transparent 70%);
+  background: radial-gradient(ellipse at center, rgba(100, 160, 255, 0.08) 0%, transparent 70%);
   border-radius: 50%;
 }
 
 .cloud-1 {
-  width: 400px;
-  height: 60px;
-  top: 12%;
+  width: 350px;
+  height: 50px;
+  top: 15%;
   left: -100px;
-  animation: cloudDrift 25s linear infinite;
+  animation: cloudDrift 30s linear infinite;
 }
 
 .cloud-2 {
-  width: 300px;
-  height: 50px;
-  top: 20%;
+  width: 280px;
+  height: 40px;
+  top: 22%;
   left: -50px;
-  animation: cloudDrift 35s linear infinite 5s;
-  opacity: 0.7;
+  animation: cloudDrift 40s linear infinite 8s;
+  opacity: 0.6;
 }
 
 .cloud-3 {
-  width: 350px;
-  height: 45px;
-  top: 8%;
+  width: 300px;
+  height: 35px;
+  top: 10%;
   left: -150px;
-  animation: cloudDrift 30s linear infinite 10s;
-  opacity: 0.5;
+  animation: cloudDrift 35s linear infinite 15s;
+  opacity: 0.4;
 }
 
 @keyframes cloudDrift {
   from { transform: translateX(-100%); }
   to { transform: translateX(calc(100vw + 100%)); }
-}
-
-/* ==================== Birds ==================== */
-.birds {
-  position: absolute;
-  top: 18%;
-  left: 0;
-  width: 100%;
-  height: 100px;
-  z-index: 2;
-  pointer-events: none;
-}
-
-.bird {
-  position: absolute;
-  font-size: 18px;
-  color: rgba(0,0,0,0.3);
-  font-weight: bold;
-  animation: birdFly 12s linear infinite;
-  transform-origin: center;
-}
-
-.b1 { left: -30px; top: 20px; animation-duration: 14s; }
-.b2 { left: -60px; top: 50px; animation-duration: 18s; animation-delay: 3s; font-size: 14px; }
-.b3 { left: -20px; top: 10px; animation-duration: 16s; animation-delay: 7s; font-size: 22px; }
-
-@keyframes birdFly {
-  0% { transform: translateX(-50px) translateY(0); }
-  25% { transform: translateX(25vw) translateY(-15px); }
-  50% { transform: translateX(50vw) translateY(5px); }
-  75% { transform: translateX(75vw) translateY(-10px); }
-  100% { transform: translateX(calc(100vw + 50px)) translateY(0); }
 }
 
 /* ==================== Sparkles ==================== */
@@ -604,18 +585,18 @@ onUnmounted(() => {
 
 .sparkle {
   position: absolute;
-  top: 20%;
+  top: 15%;
   width: 2px;
   height: 2px;
-  background: rgba(255,255,255,0.6);
+  background: rgba(150, 200, 255, 0.5);
   border-radius: 50%;
-  animation: sparkle 3s ease-in-out infinite;
-  box-shadow: 0 0 4px rgba(255,255,255,0.3);
+  animation: sparkleAnim 3.5s ease-in-out infinite;
+  box-shadow: 0 0 4px rgba(150, 200, 255, 0.2);
 }
 
-@keyframes sparkle {
+@keyframes sparkleAnim {
   0%, 100% { opacity: 0; transform: translateY(0) scale(0); }
-  50% { opacity: 1; transform: translateY(-30px) scale(1); }
+  50% { opacity: 0.8; transform: translateY(-25px) scale(1); }
 }
 
 /* ==================== Bubbles ==================== */
@@ -624,33 +605,33 @@ onUnmounted(() => {
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 60%;
+  height: 55%;
   z-index: 3;
   pointer-events: none;
 }
 
 .bubble {
   position: absolute;
-  bottom: -10px;
+  bottom: -8px;
   border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3), rgba(100,180,255,0.1));
-  border: 1px solid rgba(255,255,255,0.1);
-  animation: bubbleRise var(--duration, 8s) ease-in infinite;
+  background: radial-gradient(circle at 30% 30%, rgba(150, 200, 255, 0.2), rgba(60, 120, 200, 0.05));
+  border: 1px solid rgba(150, 200, 255, 0.06);
+  animation: bubbleRise 9s ease-in infinite;
 }
 
 @keyframes bubbleRise {
   0% {
-    transform: translateY(0) translateX(0) scale(0.5);
+    transform: translateY(0) translateX(0) scale(0.4);
     opacity: 0;
   }
   10% {
-    opacity: 1;
-  }
-  90% {
     opacity: 0.6;
   }
+  90% {
+    opacity: 0.3;
+  }
   100% {
-    transform: translateY(calc(-60vh)) translateX(var(--drift, 0px)) scale(1.2);
+    transform: translateY(calc(-55vh)) translateX(var(--drift, 0px)) scale(1.1);
     opacity: 0;
   }
 }
@@ -658,12 +639,12 @@ onUnmounted(() => {
 /* ==================== Mouse Glow ==================== */
 .mouse-glow {
   position: fixed;
-  width: 400px;
-  height: 400px;
+  width: 350px;
+  height: 350px;
   border-radius: 50%;
   pointer-events: none;
   z-index: 4;
-  background: radial-gradient(circle, rgba(100, 180, 255, 0.06) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(100, 170, 255, 0.04) 0%, transparent 70%);
   transform: translate(-50%, -50%);
   transition: opacity 0.3s;
 }
@@ -679,29 +660,34 @@ onUnmounted(() => {
   position: relative;
   width: 400px;
   padding: 40px;
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  background: rgba(8, 14, 36, 0.6);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
   border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(100, 170, 255, 0.1);
   box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.3),
-    0 2px 8px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    0 8px 40px rgba(0, 0, 0, 0.4),
+    0 2px 8px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(100, 170, 255, 0.06);
   overflow: hidden;
 }
 
 .card-border-glow {
   position: absolute;
-  top: -2px;
-  left: -2px;
-  right: -2px;
-  bottom: -2px;
-  border-radius: 26px;
-  background: linear-gradient(135deg, rgba(252, 227, 138, 0.2), transparent 40%, rgba(100, 180, 255, 0.15) 100%);
+  top: -1px;
+  left: -1px;
+  right: -1px;
+  bottom: -1px;
+  border-radius: 25px;
+  background: linear-gradient(135deg,
+    rgba(100, 170, 255, 0.15),
+    transparent 35%,
+    rgba(60, 120, 200, 0.08) 70%,
+    rgba(100, 170, 255, 0.05)
+  );
   z-index: -1;
-  opacity: 0.5;
-  transition: opacity 0.3s;
+  opacity: 0.4;
+  transition: opacity 0.4s;
 }
 
 .login-card:hover .card-border-glow {
@@ -715,29 +701,29 @@ onUnmounted(() => {
 }
 
 .avatar {
-  width: 56px;
-  height: 56px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(252, 227, 138, 0.2), rgba(100, 180, 255, 0.2));
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: linear-gradient(135deg, rgba(100, 170, 255, 0.15), rgba(40, 80, 160, 0.15));
+  border: 1px solid rgba(100, 170, 255, 0.12);
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0 auto 16px;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(180, 212, 255, 0.7);
 }
 
 .card-header h2 {
   font-size: 24px;
   font-weight: 700;
-  color: #fff;
+  color: #d0e0ff;
   margin: 0 0 4px;
   letter-spacing: -0.01em;
 }
 
 .card-header p {
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(150, 190, 240, 0.45);
   margin: 0;
 }
 
@@ -760,12 +746,12 @@ onUnmounted(() => {
   gap: 6px;
   font-size: 13px;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(150, 190, 240, 0.5);
   transition: color 0.3s;
 }
 
 .form-group.focused label {
-  color: #f5b85a;
+  color: #8ab4ff;
 }
 
 .input-wrapper {
@@ -775,10 +761,10 @@ onUnmounted(() => {
 .input-wrapper input {
   width: 100%;
   padding: 12px 14px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(10, 20, 48, 0.5);
+  border: 1px solid rgba(100, 170, 255, 0.1);
   border-radius: 12px;
-  color: #fff;
+  color: #d0e0ff;
   font-size: 15px;
   outline: none;
   transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
@@ -786,13 +772,13 @@ onUnmounted(() => {
 }
 
 .input-wrapper input::placeholder {
-  color: rgba(255, 255, 255, 0.2);
+  color: rgba(100, 160, 230, 0.2);
 }
 
 .form-group.focused .input-wrapper input {
-  border-color: rgba(245, 184, 90, 0.5);
-  background: rgba(255, 255, 255, 0.08);
-  box-shadow: 0 0 20px rgba(245, 184, 90, 0.06);
+  border-color: rgba(100, 170, 255, 0.4);
+  background: rgba(12, 24, 54, 0.6);
+  box-shadow: 0 0 24px rgba(100, 170, 255, 0.05);
 }
 
 .input-glow {
@@ -805,7 +791,7 @@ onUnmounted(() => {
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.3s;
-  box-shadow: 0 0 30px rgba(245, 184, 90, 0.08);
+  box-shadow: 0 0 30px rgba(100, 170, 255, 0.06);
 }
 
 .form-group.focused .input-glow {
@@ -819,14 +805,14 @@ onUnmounted(() => {
   transform: translateY(-50%);
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.3);
+  color: rgba(100, 170, 255, 0.3);
   cursor: pointer;
   padding: 4px;
   transition: color 0.2s;
 }
 
 .toggle-pw:hover {
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(150, 200, 255, 0.5);
 }
 
 /* Form options */
@@ -841,7 +827,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(150, 190, 240, 0.4);
   cursor: pointer;
   user-select: none;
 }
@@ -853,7 +839,7 @@ onUnmounted(() => {
 .checkmark {
   width: 16px;
   height: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(100, 170, 255, 0.2);
   border-radius: 4px;
   display: flex;
   align-items: center;
@@ -863,15 +849,15 @@ onUnmounted(() => {
 }
 
 .remember-me input:checked + .checkmark {
-  background: #f5b85a;
-  border-color: #f5b85a;
+  background: #5a90e0;
+  border-color: #5a90e0;
 }
 
 .remember-me input:checked + .checkmark::after {
   content: '';
   width: 4px;
   height: 8px;
-  border: solid #0b0b2b;
+  border: solid #050714;
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
   position: absolute;
@@ -879,22 +865,22 @@ onUnmounted(() => {
 }
 
 .forgot-link {
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(100, 170, 255, 0.35);
   text-decoration: none;
   transition: color 0.2s;
 }
 
 .forgot-link:hover {
-  color: #f5b85a;
+  color: #8ab4ff;
 }
 
 /* Login Button */
 .login-btn {
   padding: 14px;
-  background: linear-gradient(135deg, #f5b85a 0%, #e8853d 100%);
+  background: linear-gradient(135deg, #4a82d4 0%, #2a5aae 50%, #1a4a96 100%);
   border: none;
   border-radius: 12px;
-  color: #0b0b2b;
+  color: #d0e8ff;
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
@@ -910,7 +896,7 @@ onUnmounted(() => {
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  background: linear-gradient(90deg, transparent, rgba(180, 212, 255, 0.12), transparent);
   transition: left 0.5s;
 }
 
@@ -920,7 +906,7 @@ onUnmounted(() => {
 
 .login-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 24px rgba(232, 133, 61, 0.3);
+  box-shadow: 0 8px 28px rgba(74, 130, 212, 0.3);
 }
 
 .login-btn:active {
@@ -928,7 +914,7 @@ onUnmounted(() => {
 }
 
 .login-btn:disabled {
-  opacity: 0.7;
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
@@ -936,8 +922,8 @@ onUnmounted(() => {
   display: inline-block;
   width: 20px;
   height: 20px;
-  border: 2px solid rgba(11, 11, 43, 0.3);
-  border-top-color: #0b0b2b;
+  border: 2px solid rgba(150, 200, 255, 0.2);
+  border-top-color: #8ab4ff;
   border-radius: 50%;
   animation: spin 0.6s linear infinite;
 }
@@ -950,11 +936,11 @@ onUnmounted(() => {
 .error-message {
   text-align: center;
   font-size: 13px;
-  color: #ff6b6b;
+  color: #ff7b7b;
   padding: 8px;
-  background: rgba(255, 107, 107, 0.1);
+  background: rgba(255, 80, 80, 0.08);
   border-radius: 8px;
-  border: 1px solid rgba(255, 107, 107, 0.15);
+  border: 1px solid rgba(255, 80, 80, 0.1);
 }
 
 /* Card Footer */
@@ -962,23 +948,23 @@ onUnmounted(() => {
   text-align: center;
   margin-top: 24px;
   padding-top: 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid rgba(100, 170, 255, 0.06);
 }
 
 .card-footer p {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(150, 190, 240, 0.35);
   margin: 0;
 }
 
 .card-footer a {
-  color: #f5b85a;
+  color: #8ab4ff;
   text-decoration: none;
   transition: color 0.2s;
 }
 
 .card-footer a:hover {
-  color: #fce38a;
+  color: #b8d4ff;
 }
 
 /* ==================== Responsive ==================== */
@@ -989,13 +975,13 @@ onUnmounted(() => {
   }
 
   .sun {
-    width: 80px;
-    height: 80px;
+    width: 70px;
+    height: 70px;
   }
 
   .sun-glow {
-    width: 200px;
-    height: 200px;
+    width: 180px;
+    height: 180px;
   }
 }
 
