@@ -13,6 +13,7 @@ export default defineConfig({
   extends: teekConfig,
   title: "vitepress-theme-teek",
   description: description,
+  baseurl:"Rui-bolg/",
   cleanUrls: false,
   lastUpdated: true,
   lang: "zh-CN",
@@ -89,6 +90,7 @@ export default defineConfig({
     },
     nav: [
       { text: "首页", link: "/" },
+      { text: "🍎 展示页", link: "/apple-style" },
       {
         text: "指南",
         link: "/guide/intro",
