@@ -209,7 +209,8 @@
         </div>
       </div>
     </div>
-    </div>
+      </div>
+    </transition>
   </div>
 </template>
 
