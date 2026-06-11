@@ -91,6 +91,7 @@ export default defineConfig({
     nav: [
       { text: "首页", link: "/" },
       { text: "🍎 展示页", link: "/apple-style" },
+      { text: "🌊 海景登录", link: "/login-ocean" },
       {
         text: "指南",
         link: "/guide/intro",

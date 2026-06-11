@@ -1,6 +1,7 @@
 import Teek from "vitepress-theme-teek";
 import TeekLayoutProvider from "./components/TeekLayoutProvider.vue";
 import AppleStylePage from "./components/AppleStylePage.vue";
+import LoginOceanPage from "./components/LoginOceanPage.vue";
 
 // Teek 在线主题包引用（需安装 Teek 在线版本）
 import "vitepress-theme-teek/index.css";
@@ -25,5 +26,6 @@ export default {
   Layout: TeekLayoutProvider,
   enhanceApp({ app }) {
     app.component("AppleStylePage", AppleStylePage);
+    app.component("LoginOceanPage", LoginOceanPage);
   },
 };
