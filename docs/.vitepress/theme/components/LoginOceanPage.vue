@@ -3,6 +3,25 @@
     <!-- Canvas for ocean -->
     <canvas ref="oceanCanvas" class="ocean-canvas"></canvas>
 
+    <!-- Intro overlay -->
+    <transition name="intro-fade">
+      <div class="intro-overlay" v-if="showIntro" @click="dismissIntro">
+        <div class="intro-content">
+          <div class="intro-line-top">✦</div>
+          <h1 class="intro-text">Everything will be ok</h1>
+          <div class="intro-line-bottom">✦</div>
+          <p class="intro-hint">点击任意处继续</p>
+        </div>
+        <div class="intro-progress">
+          <div class="intro-progress-bar"></div>
+        </div>
+      </div>
+    </transition>
+
+    <!-- Login content (fades in after intro) -->
+    <transition name="login-fade">
+      <div class="login-content" v-if="!showIntro">
+
     <!-- Little White Dog -->
     <div class="dog-area">
       <div class="dog" :class="dogActionClass" @click="nextDogAction">
@@ -117,9 +136,6 @@
       </div>
     </div>
 
-    <!-- Gentle message -->
-    <div class="gentle-message">Everything will be ok</div>
-
     <!-- Login card -->
     <div class="login-card-wrapper" :style="cardParallaxStyle">
       <div class="login-card">
@@ -193,6 +209,7 @@
         </div>
       </div>
     </div>
+    </div>
   </div>
 </template>
 
@@ -202,6 +219,7 @@ import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue'
 const containerRef = ref<HTMLElement | null>(null)
 const oceanCanvas = ref<HTMLCanvasElement | null>(null)
 
+const showIntro = ref(true)
 const email = ref('')
 const password = ref('')
 const showPassword = ref(false)
@@ -470,6 +488,11 @@ const cardParallaxStyle = computed(() => {
   }
 })
 
+// ==================== Intro ====================
+function dismissIntro() {
+  showIntro.value = false
+}
+
 // ==================== Dog ====================
 const dogAction = ref('idle')
 const dogActionClass = computed(() => `dog-${dogAction.value}`)
@@ -529,6 +552,9 @@ function handleLogin() {
 onMounted(() => {
   initOcean()
   nextAction()
+  setTimeout(() => {
+    if (showIntro.value) dismissIntro()
+  }, 4000)
 })
 
 onUnmounted(() => {
@@ -770,24 +796,102 @@ onUnmounted(() => {
   100% { opacity: 0; transform: translateY(-24px) scale(0.6); }
 }
 
-/* ==================== Gentle Message ==================== */
-.gentle-message {
-  position: relative;
-  z-index: 3;
-  font-size: 14px;
-  font-weight: 300;
-  color: rgba(180, 210, 255, 0.35);
-  letter-spacing: 0.08em;
-  text-align: center;
-  margin-bottom: 12px;
-  font-style: italic;
-  animation: messageFade 2s ease-in;
+/* ==================== Intro Overlay ==================== */
+.intro-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(2, 5, 12, 0.92);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
   user-select: none;
 }
 
-@keyframes messageFade {
-  0% { opacity: 0; transform: translateY(6px); }
-  100% { opacity: 1; transform: translateY(0); }
+.intro-content {
+  text-align: center;
+  animation: introPulse 4s ease-in-out;
+}
+
+.intro-text {
+  font-size: clamp(24px, 5vw, 42px);
+  font-weight: 200;
+  color: rgba(180, 210, 255, 0.7);
+  letter-spacing: 0.06em;
+  margin: 16px 0;
+  font-style: italic;
+}
+
+.intro-line-top,
+.intro-line-bottom {
+  color: rgba(180, 210, 255, 0.2);
+  font-size: 14px;
+  letter-spacing: 0.3em;
+}
+
+.intro-hint {
+  margin-top: 32px;
+  font-size: 12px;
+  color: rgba(180, 210, 255, 0.2);
+  letter-spacing: 0.05em;
+  animation: hintBlink 2s ease-in-out infinite;
+}
+
+.intro-progress {
+  position: absolute;
+  bottom: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 1px;
+  background: rgba(180, 210, 255, 0.08);
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.intro-progress-bar {
+  width: 100%;
+  height: 100%;
+  background: rgba(180, 210, 255, 0.3);
+  animation: progressShrink 4s linear forwards;
+  transform-origin: right center;
+}
+
+@keyframes introPulse {
+  0% { opacity: 0; transform: translateY(10px); }
+  20% { opacity: 1; transform: translateY(0); }
+  80% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0.9; }
+}
+
+@keyframes hintBlink {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes progressShrink {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+
+/* Transitions */
+.intro-fade-enter-active { transition: opacity 0.6s; }
+.intro-fade-leave-active { transition: opacity 0.8s ease; }
+.intro-fade-enter-from,
+.intro-fade-leave-to { opacity: 0; }
+
+.login-fade-enter-active { transition: opacity 0.8s ease 0.2s; }
+.login-fade-enter-from { opacity: 0; }
+
+/* ==================== Login Content Wrapper ==================== */
+.login-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 /* ==================== Login Card ==================== */
